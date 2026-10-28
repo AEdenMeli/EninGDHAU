@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Organization chart</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230f6b6b'/%3E%3Crect x='22' y='9' width='20' height='13' rx='2.5' fill='%23fff'/%3E%3Crect x='5' y='41' width='16' height='13' rx='2.5' fill='%23fff'/%3E%3Crect x='24' y='41' width='16' height='13' rx='2.5' fill='%23fff'/%3E%3Crect x='43' y='41' width='16' height='13' rx='2.5' fill='%23fff'/%3E%3Cpath d='M32 22v9M13 41v-10h38v10M32 31v10' fill='none' stroke='%23fff' stroke-width='3' stroke-linejoin='round'/%3E%3C/svg%3E">
 <meta name="description" content="Editable organization chart. Open this file in a web browser.">
@@ -12,8 +12,12 @@
 <meta property="og:site_name" content="Org Chart Maker">
 <meta property="og:title" content="Organization chart">
 <meta property="og:description" content="Editable organization chart. Open this file in a web browser.">
-<meta property="og:image" content="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230f6b6b'/%3E%3Crect x='22' y='9' width='20' height='13' rx='2.5' fill='%23fff'/%3E%3Crect x='5' y='41' width='16' height='13' rx='2.5' fill='%23fff'/%3E%3Crect x='24' y='41' width='16' height='13' rx='2.5' fill='%23fff'/%3E%3Crect x='43' y='41' width='16' height='13' rx='2.5' fill='%23fff'/%3E%3Cpath d='M32 22v9M13 41v-10h38v10M32 31v10' fill='none' stroke='%23fff' stroke-width='3' stroke-linejoin='round'/%3E%3C/svg%3E">
-<meta name="twitter:card" content="summary">
+<meta property="og:image" content="og-preview.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Preview of the example organization chart">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="og-preview.png">
 <style>
 :root{
   --bg:#e9edf0; --paper:#fff; --ink:#16252f; --muted:#5d6e7a; --line:#8fa1ad;
@@ -329,7 +333,7 @@ kbd{font-family:inherit;font-weight:600;font-size:11.5px;background:var(--bg);bo
 .tdot::-webkit-color-swatch-wrapper{padding:0}
 .tdot::-webkit-color-swatch{border:2px solid rgba(255,255,255,.9);border-radius:50%;box-shadow:0 0 0 1px rgba(0,0,0,.25)}
 .tdot::-moz-color-swatch{border:2px solid rgba(255,255,255,.9);border-radius:50%}
-#stage.filedrag::after{content:"Drop pictures here";position:absolute;inset:8px;border:3px dashed var(--accent);border-radius:14px;background:rgba(42,157,143,.12);display:grid;place-items:center;font-size:20px;font-weight:700;color:var(--accent);z-index:30;pointer-events:none}
+#stage.filedrag::after{content:var(--i18n-drop,"Drop pictures here");position:absolute;inset:8px;border:3px dashed var(--accent);border-radius:14px;background:rgba(42,157,143,.12);display:grid;place-items:center;font-size:20px;font-weight:700;color:var(--accent);z-index:30;pointer-events:none}
 [data-theme=dark] .tgrp{border-color:#3f515d}
 [data-theme=dark] .tgm:hover{background:rgba(255,255,255,.12)}
 .trl>*,.tgb>*{flex:none}
@@ -428,14 +432,103 @@ button.pav{cursor:pointer;margin-left:8px}
 .acbox .field input[type=color]{width:56px;height:34px;padding:2px;border:1px solid #b9c5cd;border-radius:6px;background:var(--paper)}
 @media print{.peerov,.peers,.ss-list{display:none!important}}
 
+/* ---- header that never overlaps, phone/tablet layout, viewer mode, empty-chart message ---- */
+.bar{display:flex;flex-direction:row;flex-wrap:wrap;align-items:center;gap:0 12px;padding:6px 14px 8px;position:relative}
+.bar .menu{order:1;flex:1 1 320px;min-width:0;margin-left:-8px}
+.hdr-r{order:2;margin-left:auto;display:flex;align-items:center;gap:10px;flex:none;min-width:0}
+.bar .title{order:3;flex:1 0 100%;width:100%;max-width:560px}
+.applogo{position:static}
+.peers{position:static;padding-left:0}
+.langbtn{padding:4px 10px;font-size:12px;font-weight:700;min-width:44px}
+#viewBadge{background:#e0480b;color:#fff;border-radius:12px;padding:2px 10px;font-size:12px;font-weight:700;white-space:nowrap}
+#viewBadge[hidden]{display:none}
+#emptyBox{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);text-align:center;z-index:4;max-width:min(420px,86%)}
+#emptyBox p{color:var(--muted);margin:0 0 14px}
+@media (max-width:900px){.applogo span{display:none}}
+@media (max-width:760px){
+  .hdr-r{order:0;flex:1 0 100%;margin:0 0 2px}
+  .hdr-r .applogo{margin-right:auto}
+  .bar{padding:6px 10px}
+  .title{font-size:18px}
+  .mb{padding:8px 10px}
+  #q{flex:1 1 130px;min-width:110px;max-width:none}
+  #zval{margin-left:4px}
+  .main{flex-direction:column}
+  .panel{width:100%;max-height:46vh;border-left:0;border-top:1px solid #d3dbe0;padding:12px 14px}
+  .tray{width:min(84vw,260px)}
+  #cloudBadge{right:8px;bottom:56px;max-width:calc(100vw - 16px);font-size:11px}
+  .toast{max-width:90vw;text-align:center}
+  .cloud-card{width:min(420px,92vw);box-sizing:border-box}
+  .glbadge{top:6px;right:8px}
+}
+@media (pointer:coarse){
+  .btn,.mb,.dd button,.dd2 button{min-height:40px}
+  .dd button,.dd2 button{padding:10px 14px}
+  .ss-it{padding:10px}
+  .tg{padding:4px 12px}
+  .rz{width:26px;height:26px}
+  .pav{width:36px;height:36px}
+}
+.viewer .menu>.mi:nth-child(-n+3),.viewer #tUndo,.viewer #tRedo,.viewer #tFold,.viewer #tSel,.viewer #tGlock,.viewer #mGlock,.viewer #mNotes,.viewer #mFold,.viewer #panel,.viewer .glbadge,.viewer #pgAdd,.viewer #trayNew,.viewer .tb,.viewer .tgm,.viewer .rz,.viewer .nf,.viewer .bfmt,.viewer .bt,.viewer .imt,.viewer .nh button,.viewer #pgMenu{display:none!important}
+.viewer .card{cursor:default}
+.viewer .stage{cursor:grab}
+.viewer .brand,.viewer .pimg{cursor:default}
+
+/* ---- v3: logo above menus, status in the header, export preview, avatar crop, viewer protection ---- */
+.bar{display:flex;flex-direction:column;flex-wrap:nowrap;align-items:stretch;gap:0;padding:6px 14px 8px}
+.hdr-top{display:flex;align-items:center;gap:10px;min-width:0;padding:0 0 2px}
+.hdr-top .applogo{flex:none;margin-right:auto}
+.applogo span{display:inline!important;white-space:nowrap}
+.hdr-r{order:0;margin:0;display:flex;align-items:center;gap:10px;flex:none;min-width:0;flex-wrap:nowrap}
+.bar .menu{order:0;flex:none;min-width:0;margin-left:-8px}
+.hdr-row2{display:flex;align-items:center;gap:12px;min-width:0}
+.bar .title{order:0;flex:1 1 200px;min-width:0;width:auto;max-width:560px}
+#cloudBadge{position:static;z-index:auto;box-shadow:none;margin-left:auto;flex:none;padding:4px 10px;max-width:100%}
+#cloudBadge[data-state="observing"]{background:#1d5a8a}
+@media (max-width:760px){
+  .hdr-r{flex:none;margin:0}
+  .bar{padding:6px 10px}
+  #cloudBadge{max-width:none;font-size:11px}
+  .hdr-row2{flex-wrap:wrap;gap:4px 12px}
+  .hdr-row2 .title{flex:1 1 100%;max-width:none}
+}
+@media (max-width:420px){.applogo span{font-size:13px}.hdr-top{gap:6px}.hdr-r{gap:6px}.peers .pav:nth-child(n+4){display:none}}
+body.signedout .bar,body.signedout .main,body.signedout .pgbar,body.signedout #toast,body.signedout .navp{visibility:hidden}
+body.signedout #cloudGate{background:var(--bg,#e8edf0)}
+.expbox{width:min(920px,96vw);display:flex;flex-direction:column;gap:10px;max-height:94vh}
+.expbox h2{margin:0;font-size:18px}
+.exprow{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end}
+.exprow label{display:flex;flex-direction:column;gap:3px;font-size:13px;font-weight:600}
+.exprow select{padding:7px 8px;border:1px solid #b9c5cd;border-radius:6px;background:var(--paper);color:var(--ink)}
+.expprev{flex:1;min-height:180px;max-height:62vh;overflow:auto;border:1px solid #b9c5cd;border-radius:8px;background:repeating-conic-gradient(#c9d2d8 0 25%,#eef2f4 0 50%) 0 0/16px 16px;display:grid;place-items:center;padding:8px}
+.expprev img{max-width:100%;max-height:58vh;width:auto;height:auto;object-fit:contain;display:block;box-shadow:0 2px 12px rgba(0,0,0,.25)}
+.expprev img[hidden],#expMsg[hidden],#expQL[hidden]{display:none}
+#expMsg{background:var(--paper);padding:6px 12px;border-radius:8px;font-size:13px}
+#acMain{display:flex;flex-direction:column;gap:12px}
+#acMain[hidden],#acCropBox[hidden]{display:none}
+#acCropBox{display:flex;flex-direction:column;align-items:center;gap:10px}
+#acCropBox h2{margin:0;font-size:18px;align-self:flex-start}
+#acCv{width:240px;height:240px;max-width:100%;touch-action:none;cursor:grab;border-radius:8px;background:#fff}
+#acCropBox label{display:flex;align-items:center;gap:8px;font-size:13px}
+#acZoom{width:200px}
+.viewer,.viewer *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.viewer #q{-webkit-user-select:text;user-select:text}
+.viewer img{-webkit-user-drag:none}
+@media print{#cloudBadge,.hdr-top{display:none!important}.viewer .main{display:none!important}}
+
 </style>
 </head>
-<body>
+<body class="signedout">
 
 <header class="bar">
-  <input class="title" id="title" type="text" aria-label="Chart title" value="Organization chart">
-  <div class="applogo" id="appLogo" title="Org Chart Maker"><svg class="applogo-svg" viewBox="0 0 64 64" width="30" height="30" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#0f6b6b"/><rect x="22" y="9" width="20" height="13" rx="2.5" fill="#fff"/><rect x="5" y="41" width="16" height="13" rx="2.5" fill="#fff"/><rect x="24" y="41" width="16" height="13" rx="2.5" fill="#fff"/><rect x="43" y="41" width="16" height="13" rx="2.5" fill="#fff"/><path d="M32 22v9M13 41v-10h38v10M32 31v10" fill="none" stroke="#fff" stroke-width="3" stroke-linejoin="round"/></svg><span>Org Chart Maker</span></div>
-  <div class="peers" id="peers" hidden aria-label="People online"></div>
+  <div class="hdr-top">
+    <div class="applogo" id="appLogo" title="Org Chart Maker"><svg class="applogo-svg" viewBox="0 0 64 64" width="30" height="30" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#0f6b6b"/><rect x="22" y="9" width="20" height="13" rx="2.5" fill="#fff"/><rect x="5" y="41" width="16" height="13" rx="2.5" fill="#fff"/><rect x="24" y="41" width="16" height="13" rx="2.5" fill="#fff"/><rect x="43" y="41" width="16" height="13" rx="2.5" fill="#fff"/><path d="M32 22v9M13 41v-10h38v10M32 31v10" fill="none" stroke="#fff" stroke-width="3" stroke-linejoin="round"/></svg><span>Org Chart Maker</span></div>
+    <div class="hdr-r" id="hdrR">
+      <span id="viewBadge" hidden>View only</span>
+      <div class="peers" id="peers" hidden aria-label="People online"></div>
+      <button class="btn langbtn" id="langBtn" type="button">ไทย</button>
+    </div>
+  </div>
   <nav class="tools menu" id="menu" aria-label="Menu">
     <div class="mi"><button class="mb">File</button><div class="dd">
       <button id="reset">New from example</button>
@@ -449,6 +542,10 @@ button.pav{cursor:pointer;margin-left:8px}
     <span id="zval">100%</span><button class="btn" id="tUndo" title="Undo (Ctrl+Z)" aria-label="Undo">↶</button><button class="btn" id="tRedo" title="Redo (Ctrl+Y)" aria-label="Redo">↷</button><button class="btn" id="tTheme" title="Dark or light mode" aria-label="Switch dark or light mode">☾</button><button class="btn" id="tFold" title="Collapse or expand all teams" aria-label="Collapse or expand all teams">⊟</button><button class="btn" id="tSel" title="Drag on the background to select several cards (Alt or Shift + drag also works)" aria-label="Select mode">⬚</button><button class="btn" id="tGlock" title="Lock or unlock all cards (K)" aria-label="Lock all cards"></button><input type="search" id="q" placeholder="Search name or position" aria-label="Search staff"><span id="qn"></span><button class="btn" id="qPrev" aria-label="Previous result">↑</button><button class="btn" id="qNext" aria-label="Next result">↓</button>
     <input type="file" id="importFile" accept=".json,application/json">
   </nav>
+  <div class="hdr-row2">
+    <input class="title" id="title" type="text" aria-label="Chart title" value="Organization chart">
+    <div id="cloudBadge" data-state="loading"><span id="cloudStatusText">กำลังเชื่อมต่อ…</span><span id="cloudOnline"></span><button id="cloudSignOut" type="button" hidden>ออกจากระบบ</button></div>
+  </div>
 </header>
 
 <div class="main">
@@ -532,14 +629,36 @@ button.pav{cursor:pointer;margin-left:8px}
 <div class="keys" id="keys"><button class="btn" id="keysBtn" aria-expanded="false" aria-controls="keybox" title="Keyboard shortcuts (?)">Shortcuts</button><div class="keybox" id="keybox" hidden></div></div>
 
 
+<div class="ied" id="expd" hidden role="dialog" aria-modal="true" aria-label="Save as image">
+  <div class="iebox expbox">
+    <h2>Save as image</h2>
+    <div class="exprow">
+      <label>Format<select id="expFmt"><option value="png">PNG</option><option value="jpg">JPG</option></select></label>
+      <label>Size<select id="expScale"><option value="1">1× (small)</option><option value="2" selected>2× (sharp)</option><option value="3">3× (very large)</option></select></label>
+      <label id="expQL" hidden>Quality<input type="range" id="expQ" min="60" max="100" value="92"></label>
+    </div>
+    <div class="expprev"><img id="expImg" alt="Preview" hidden><span id="expMsg">Preparing preview…</span></div>
+    <p class="hint" id="expInfo" style="margin:0"></p>
+    <div class="iebar end"><button class="btn" id="expCancel" type="button">Cancel</button><button class="btn primary" id="expSave" type="button" disabled>Save</button></div>
+  </div>
+</div>
 <div class="ied" id="acct" hidden role="dialog" aria-modal="true" aria-label="Account settings">
   <div class="iebox acbox">
+    <div id="acMain">
     <h2>Account settings</h2>
     <div class="acrow"><div class="ph" id="acAv"></div><div class="accol"><button class="btn" id="acUp" type="button">Upload picture</button><button class="btn" id="acRm" type="button">Remove picture</button><input type="file" id="acFile" accept="image/*" hidden></div></div>
     <label class="field"><span>Display name (shown to other people)</span><input type="text" id="acName" maxlength="40" autocomplete="nickname"></label>
     <label class="field"><span>Your colour (pointer and card tag)</span><input type="color" id="acColor"></label>
     <p class="hint" id="acMail" style="margin:0"></p>
     <div class="iebar end"><button class="btn" id="acCancel" type="button">Cancel</button><button class="btn primary" id="acSave" type="button">Save</button></div>
+    </div>
+    <div id="acCropBox" hidden>
+      <h2>Crop picture</h2>
+      <canvas id="acCv" width="240" height="240"></canvas>
+      <label>Zoom<input type="range" id="acZoom" min="1" max="4" step="0.01" value="1"></label>
+      <p class="hint" style="margin:0">Drag to move, use the slider to zoom</p>
+      <div class="iebar end"><button class="btn" id="acCropNo" type="button">Cancel</button><button class="btn primary" id="acCropOk" type="button">Use crop</button></div>
+    </div>
   </div>
 </div>
 <div id="cloudGate" role="dialog" aria-modal="true" aria-labelledby="cloudHeading">
@@ -557,7 +676,6 @@ button.pav{cursor:pointer;margin-left:8px}
     <p style="font-size:12px;margin-bottom:0">อุอิ เว็บนี้เป็นแบบ invite นาจา ♥</p>
   </div>
 </div>
-<div id="cloudBadge" data-state="loading"><span id="cloudStatusText">กำลังเชื่อมต่อ…</span><span id="cloudOnline"></span><button id="cloudSignOut" type="button" hidden>ออกจากระบบ</button></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 (function(){
@@ -668,12 +786,16 @@ button.pav{cursor:pointer;margin-left:8px}
     renderExtras();
     var host = $('chart');
     host.innerHTML = '';
+    var oldEmpty = $('emptyBox'); if(oldEmpty) oldEmpty.remove();
     if(!state.root){
-      var e = document.createElement('div'); e.className = 'empty';
-      e.innerHTML = '<p>The chart is empty. Start with the top role.</p>';
-      var b = document.createElement('button'); b.className = 'btn primary'; b.textContent = 'Add the top role';
-      b.onclick = function(){ state.root = mk('New person', 'Position'); select(state.root.id, true); };
-      e.appendChild(b); host.appendChild(e); host.className = '';
+      var e = document.createElement('div'); e.id = 'emptyBox';
+      var pe = document.createElement('p'); pe.textContent = 'The chart is empty. Start with the top role.'; e.appendChild(pe);
+      if(!VIEWER){
+        var b = document.createElement('button'); b.className = 'btn primary'; b.textContent = 'Add the top role';
+        b.onclick = function(){ state.root = mk('New person', 'Position'); select(state.root.id, true); };
+        e.appendChild(b);
+      }
+      $('stage').appendChild(e); host.className = '';
       return;
     }
     host.className = 'tree';
@@ -1162,28 +1284,62 @@ button.pav{cursor:pointer;margin-left:8px}
     var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;
     document.body.appendChild(a); a.click(); a.remove(); setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1500);
   }
-  function exportImage(type){
+  /* ---------- save as image: preview first, then save ---------- */
+  var EXP = { type: 'png', url: '', blob: null, t: 0, seq: 0 };
+  function chartSvgSource(){
     var w = $('world'), old = w.style.transform; w.style.transform = 'none';
-    var r0 = w.getBoundingClientRect(), W = 0, H = 0;
-    [].forEach.call(w.querySelectorAll('.card,.note,.brand'), function(k){ var r = k.getBoundingClientRect(); W = Math.max(W, r.right - r0.left); H = Math.max(H, r.bottom - r0.top); });
+    var r0 = w.getBoundingClientRect(), W = w.offsetWidth, H = w.offsetHeight;
+    [].forEach.call(w.querySelectorAll('.card,.note,.brand,.pimg'), function(k){ var r = k.getBoundingClientRect(); W = Math.max(W, r.right - r0.left + 30); H = Math.max(H, r.bottom - r0.top + 30); });
     var cl = w.cloneNode(true); w.style.transform = old;
-    W = Math.ceil(W + 30); H = Math.ceil(H + 30);
-    cl.removeAttribute('id'); [].forEach.call(cl.querySelectorAll('.nf,.rz,.bfmt,.bt,.imt,.peerov'), function(x){ x.style.display = 'none'; }); cl.setAttribute('data-theme', document.documentElement.dataset.theme || 'light'); cl.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
-    cl.style.cssText = 'position:relative;transform:none;width:' + W + 'px;height:' + H + 'px;padding:0;background:' + TV('--bg') + ';color:' + TV('--ink') + ';font-family:"Segoe UI","Helvetica Neue",Arial,sans-serif';
-    [].forEach.call(cl.querySelectorAll('.sel,.over,.drag,.hit'), function(x){ x.classList.remove('sel', 'over', 'drag', 'hit', 'cur'); });
+    W = Math.ceil(W); H = Math.ceil(H);
+    [].forEach.call(cl.querySelectorAll('.nf,.rz,.bfmt,.bt,.imt,.peerov,.pcur'), function(x){ x.remove(); });
+    [].forEach.call(cl.querySelectorAll('.sel,.over,.drag,.hit,.msel'), function(x){ x.classList.remove('sel', 'over', 'drag', 'hit', 'cur', 'msel'); });
+    cl.setAttribute('data-theme', document.documentElement.dataset.theme || 'light'); cl.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
+    // keep id="world": its CSS (padding, absolute position) is what makes cards line up with the connector lines
+    cl.style.transform = 'none'; cl.style.left = '0'; cl.style.top = '0'; cl.style.minWidth = W + 'px'; cl.style.minHeight = H + 'px';
+    cl.style.background = TV('--bg'); cl.style.color = TV('--ink'); cl.style.fontFamily = '"Segoe UI","Helvetica Neue",Arial,"Leelawadee UI",Tahoma,Thonburi,"Noto Sans Thai",sans-serif';
     var css = [].map.call(document.querySelectorAll('style'), function(t){ return t.textContent; }).join('');
     var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + W + '" height="' + H + '"><foreignObject width="100%" height="100%"><style>' + css + '</style>' + new XMLSerializer().serializeToString(cl) + '</foreignObject></svg>';
+    return { svg: svg, W: W, H: H };
+  }
+  function renderChartBlob(type, scale, quality, cb){
+    var src; try { src = chartSvgSource(); } catch(e){ cb(null); return; }
+    var coarse = window.matchMedia && matchMedia('(pointer:coarse)').matches, maxPx = coarse ? 30e6 : 100e6;
+    var k = scale; while(k > 0.25 && (src.W * k > 16000 || src.H * k > 16000 || src.W * k * src.H * k > maxPx)) k -= 0.25;
     var img = new Image();
     img.onload = function(){
       try {
-        var c = document.createElement('canvas'); c.width = W * 2; c.height = H * 2; var g = c.getContext('2d');
+        var c = document.createElement('canvas'); c.width = Math.max(1, Math.round(src.W * k)); c.height = Math.max(1, Math.round(src.H * k)); var g = c.getContext('2d');
         g.fillStyle = TV('--bg'); g.fillRect(0, 0, c.width, c.height); g.drawImage(img, 0, 0, c.width, c.height);
-        c.toBlob(function(b){ if(b){ dl(b, fileBase() + '.' + type); toast('Image saved'); } else toast('Image export failed. Use Print and choose Save as PDF.'); }, type === 'jpg' ? 'image/jpeg' : 'image/png', 0.92);
-      } catch(e){ toast('This browser blocked image export. Use Print and choose Save as PDF.'); }
+        c.toBlob(function(b){ cb(b, c.width, c.height, k); }, type === 'jpg' ? 'image/jpeg' : 'image/png', quality);
+      } catch(e){ cb(null); }
     };
-    img.onerror = function(){ toast('Image export failed. Use Print and choose Save as PDF.'); };
-    img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+    img.onerror = function(){ cb(null); };
+    img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(src.svg);
   }
+  function expUpdate(){
+    clearTimeout(EXP.t); var my = ++EXP.seq;
+    $('expSave').disabled = true; $('expMsg').hidden = false; $('expMsg').textContent = 'Preparing preview…'; $('expImg').hidden = true; $('expInfo').textContent = '';
+    EXP.t = setTimeout(function(){
+      var type = $('expFmt').value; $('expQL').hidden = type !== 'jpg';
+      renderChartBlob(type, +$('expScale').value, +$('expQ').value / 100, function(b, w, h, k){
+        if(my !== EXP.seq) return;
+        if(!b){ $('expMsg').textContent = 'Image export failed. Use Print and choose Save as PDF.'; return; }
+        if(EXP.url) URL.revokeObjectURL(EXP.url);
+        EXP.blob = b; EXP.url = URL.createObjectURL(b); EXP.type = type;
+        $('expImg').src = EXP.url; $('expImg').hidden = false; $('expMsg').hidden = true; $('expSave').disabled = false;
+        $('expInfo').textContent = w + ' \u00d7 ' + h + ' px \u00b7 ' + (b.size > 1048576 ? (b.size / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(b.size / 1024)) + ' KB');
+      });
+    }, 150);
+  }
+  function exportImage(type){ if(VIEWER) return; $('expFmt').value = type; $('expd').hidden = false; expUpdate(); $('expSave').focus(); }
+  function closeExport(){ $('expd').hidden = true; EXP.seq++; if(EXP.url){ URL.revokeObjectURL(EXP.url); EXP.url = ''; } EXP.blob = null; $('expImg').removeAttribute('src'); }
+  ['expFmt', 'expScale'].forEach(function(i){ $(i).addEventListener('change', expUpdate); });
+  $('expQ').addEventListener('input', expUpdate);
+  $('expCancel').onclick = closeExport;
+  $('expd').addEventListener('mousedown', function(e){ if(e.target === this) closeExport(); });
+  $('expd').addEventListener('keydown', function(e){ if(e.key === 'Escape'){ e.stopPropagation(); closeExport(); } });
+  $('expSave').onclick = function(){ if(!EXP.blob) return; dl(EXP.blob, fileBase() + '.' + EXP.type); toast('Image saved'); closeExport(); };
   $('imgPng').onclick = function(){ exportImage('png'); };
   $('imgJpg').onclick = function(){ exportImage('jpg'); };
   $('htmlOut').onclick = function(){
@@ -2033,6 +2189,7 @@ button.pav{cursor:pointer;margin-left:8px}
   var PALETTE = ['#e0480b', '#0f6b6b', '#7b3fa0', '#c2185b', '#1565c0', '#8d6e00', '#2e7d32', '#ad4a00', '#00838f', '#5d4037'];
 
   function setCloudStatus(message, mode){
+    if(VIEWER && mode !== 'error' && mode !== 'loading'){ message = 'Observing'; mode = 'observing'; }
     var badge = $('cloudBadge');
     if(badge) badge.setAttribute('data-state', mode || 'loading');
     if($('cloudStatusText')) $('cloudStatusText').textContent = message;
@@ -2192,10 +2349,23 @@ button.pav{cursor:pointer;margin-left:8px}
       navStack = ns.filter(function(x){ return pageIdx(x) >= 0; });
       selId = keepSel && state.root && find(keepSel) ? keepSel : null; MSET = {}; if(selId) MSET[selId] = 1;
       $('title').value = state.title || ''; document.title = state.title || 'Organization chart';
-      renderChart(); renderPanel(); renderTabs(); histInit();
+      renderChart(); renderPanel(); renderTabs();
       try { localStorage.setItem(KEY, '{"cur":' + BOOK.cur + ',"glock":' + (BOOK.glock ? 1 : 0) + ',"pages":' + JSON.stringify(BOOK.pages) + '}'); } catch(e){}
       if(aid){ var e2 = $(aid); if(e2 && e2 !== document.activeElement && e2.focus){ e2.focus(); try { if(s0 != null) e2.setSelectionRange(s0, s1); } catch(e){} } }
     } finally { applyingRemote = false; }
+  }
+  /* undo/redo is per user: other people's changes are folded into every step of this user's history, so Undo only ever takes back this user's own edits */
+  function rebaseHistory(oldBase, theirs){
+    var cur = JSON.stringify(BOOK.pages), start = Math.min(Math.max(0, H.length - 30), hi), list = [];
+    for(var k = start; k < H.length; k++){
+      if(k === hi){ list.push({ js: cur, cur: 1 }); continue; }
+      try {
+        var m = JSON.parse('{"glock":0,"pages":' + H[k] + '}');
+        list.push({ js: JSON.stringify(mergeBooks(oldBase, m, theirs).pages) });
+      } catch(e){}
+    }
+    var nh = 0; list.forEach(function(x, i){ if(x.cur) nh = i; });
+    H = list.map(function(x){ return x.js; }); hi = nh; clearTimeout(histT); histT = 0; histOn = true; histUI();
   }
   function nameOf(uid){ var r = ''; Object.keys(PEERS).forEach(function(k){ if(PEERS[k].uid === uid) r = PEERS[k].name; }); return r; }
   async function applyRemote(data, version, opts){
@@ -2203,9 +2373,10 @@ button.pav{cursor:pointer;margin-left:8px}
     if(!data || !Array.isArray(data.pages) || !data.pages.length) return false;
     if(!opts.internal){ await idle(); if(savingNow){ pendingPull = true; return false; } }
     if(version <= currentVersion) return false;
-    var theirs = normBook(data), mineJS = syncJSON(), merged = false, result = theirs;
-    if(mineJS !== syncBase){ result = mergeBooks(baseObj(), JSON.parse(mineJS), theirs); merged = true; }
+    var theirs = normBook(data), mineJS = syncJSON(), merged = false, result = theirs, oldBase = baseObj(), conflicts = 0;
+    if(mineJS !== syncBase){ result = mergeBooks(oldBase, JSON.parse(mineJS), theirs); merged = true; conflicts = MERGE_CONFLICTS; }
     installBook(result);
+    rebaseHistory(oldBase, theirs); MERGE_CONFLICTS = conflicts;
     currentVersion = version;
     syncBase = merged ? bookJS(theirs) : syncJSON();
     cloudDirty = syncJSON() !== syncBase;
@@ -2245,14 +2416,14 @@ button.pav{cursor:pointer;margin-left:8px}
 
   /* ---------- auto-save: one request at a time, edits made while saving are sent right after ---------- */
   function queueCloudSave(pj){
-    if(!currentUser || applyingRemote || !cloudBooted) return;
+    if(!currentUser || applyingRemote || !cloudBooted || VIEWER) return;
     if(syncJSON(pj) === syncBase){ if(cloudDirty && !savingNow){ cloudDirty = false; setCloudStatus('บันทึกแล้ว', 'saved'); } return; }
     cloudDirty = true;
     setCloudStatus('มีการแก้ไข • กำลังบันทึก…', 'saving');
     clearTimeout(cloudSaveTimer); cloudSaveTimer = setTimeout(flushCloud, 700);
   }
   async function flushCloud(){
-    if(!currentUser || !cloudBooted) return;
+    if(!currentUser || !cloudBooted || VIEWER) return;
     if(savingNow){ return; }                 // the running save re-checks for newer edits when it finishes
     savingNow = true; clearTimeout(cloudSaveTimer); clearTimeout(saveRetryT);
     var failed = false;
@@ -2290,7 +2461,7 @@ button.pav{cursor:pointer;margin-left:8px}
   }
 
   async function loadCloudChart(){
-    loadProfile();
+    loadProfile(); setViewer(viewerWanted(currentUser));
     setCloudStatus('กำลังโหลดแผนผัง…', 'loading');
     var result = await cloud.from('org_charts').select('data,version').eq('id', CHART_ID).single();
     if(result.error) throw result.error;
@@ -2299,7 +2470,7 @@ button.pav{cursor:pointer;margin-left:8px}
     if((!remoteData || !Array.isArray(remoteData.pages) || remoteData.pages.length === 0)){
       var local = null;
       try { var raw = localStorage.getItem(KEY); if(raw) local = JSON.parse(raw); } catch(e){}
-      if(local && Array.isArray(local.pages) && local.pages.length){
+      if(!VIEWER && local && Array.isArray(local.pages) && local.pages.length){
         var migration = await cloud.rpc('save_org_chart', { p_id: CHART_ID, p_data: local, p_expected_version: currentVersion });
         if(migration.error) throw migration.error;
         var m = migration.data && migration.data[0];
@@ -2310,7 +2481,7 @@ button.pav{cursor:pointer;margin-left:8px}
       try { var old = localStorage.getItem(KEY); if(old) remoteData = JSON.parse(old); } catch(e){}
       if(!remoteData || !Array.isArray(remoteData.pages) || !remoteData.pages.length) remoteData = window.__EMBED__ || { pages: [example()], cur: 0, glock: false };
       setBook(remoteData);
-      var seed = await cloud.rpc('save_org_chart', { p_id: CHART_ID, p_data: chartSnapshot(), p_expected_version: currentVersion });
+      var seed = VIEWER ? { error: 1 } : await cloud.rpc('save_org_chart', { p_id: CHART_ID, p_data: chartSnapshot(), p_expected_version: currentVersion });
       if(!seed.error && seed.data && seed.data[0] && seed.data[0].ok){ currentVersion = seed.data[0].new_version; syncBase = syncJSON(); }
       else syncBase = '';
     } else {
@@ -2323,7 +2494,7 @@ button.pav{cursor:pointer;margin-left:8px}
     setTimeout(fit, 60);
     histInit();
     cloudBooted = true;
-    cloudDirty = syncBase === '' ? true : false;
+    cloudDirty = !VIEWER && syncBase === '';
     setCloudStatus('เชื่อมต่อแล้ว', 'saved');
     wireCollab();
     startCloudRealtime();
@@ -2335,6 +2506,12 @@ button.pav{cursor:pointer;margin-left:8px}
   function teardownChannel(){
     var ch = cloudChannel; cloudChannel = null; rtJoined = false;
     if(ch){ try { cloud.removeChannel(ch); } catch(e){} }
+  }
+  function lockScreen(){
+    document.body.classList.add('signedout'); $('cloudGate').hidden = false; $('cloudSignOut').hidden = true;
+    ['chart', 'notes', 'imgs', 'brand', 'lines', 'lines2', 'peerLayer', 'curLayer', 'peers', 'trayList', 'pgtabs'].forEach(function(id){ var x = $(id); if(x) x.innerHTML = ''; });
+    var eb = $('emptyBox'); if(eb) eb.remove(); $('panel').hidden = true; $('title').value = ''; document.title = 'Organization chart';
+    try { localStorage.removeItem(KEY); } catch(e){}
   }
   function stopRealtime(){
     rtStopping = true; clearTimeout(rtTimer); rtTimer = 0; clearInterval(pollT); pollT = 0; teardownChannel();
@@ -2539,7 +2716,7 @@ button.pav{cursor:pointer;margin-left:8px}
     $('acMail').textContent = currentUser.email || '';
     acPaint(); $('acct').hidden = false; $('acName').focus(); $('acName').select();
   }
-  function closeAcct(){ $('acct').hidden = true; acDraft = null; }
+  function closeAcct(){ $('acct').hidden = true; acDraft = null; closeCrop(); }
   function acPaint(){
     var h = $('acAv'); h.innerHTML = ''; h.style.background = '';
     if(acDraft.avatar){ var im = document.createElement('img'); im.src = acDraft.avatar; im.alt = ''; h.appendChild(im); }
@@ -2576,13 +2753,55 @@ button.pav{cursor:pointer;margin-left:8px}
     } catch(e){ toast('Saved on this device only: ' + (e && e.message ? e.message : 'could not reach the server')); }
   }
   $('acUp').onclick = function(){ $('acFile').click(); };
-  $('acFile').addEventListener('change', function(){ var f = this.files[0], inp = this; if(!f) return; shrinkAvatar(f, function(u){ acDraft.avatar = u; acPaint(); }); inp.value = ''; });
+  $('acFile').addEventListener('change', function(){ var f = this.files[0], inp = this; if(!f) return; openCrop(f); inp.value = ''; });
   $('acRm').onclick = function(){ acDraft.avatar = ''; acPaint(); };
   $('acName').addEventListener('input', function(){ if(!acDraft.avatar) acPaint(); });
   $('acColor').addEventListener('input', function(){ acDraft.color = this.value; if(!acDraft.avatar) acPaint(); });
   $('acSave').onclick = saveAcct; $('acCancel').onclick = closeAcct;
   $('acct').addEventListener('mousedown', function(e){ if(e.target === this) closeAcct(); });
   $('acct').addEventListener('keydown', function(e){ if(e.key === 'Escape'){ e.stopPropagation(); closeAcct(); } else if(e.key === 'Enter' && e.target.id === 'acName'){ e.preventDefault(); saveAcct(); } });
+
+  /* ---------- crop a profile picture before it is used ---------- */
+  var CROP = null;
+  function cropSize(){ var c = CROP; return { w: c.img.width * c.base * c.z, h: c.img.height * c.base * c.z }; }
+  function cropClamp(){ var c = CROP, d = cropSize(), mx = Math.max(0, (d.w - c.S) / 2), my = Math.max(0, (d.h - c.S) / 2); c.ox = Math.max(-mx, Math.min(mx, c.ox)); c.oy = Math.max(-my, Math.min(my, c.oy)); }
+  function cropDraw(){
+    cropClamp(); var c = CROP, d = cropSize(), S = c.S, g = $('acCv').getContext('2d');
+    g.clearRect(0, 0, S, S); g.fillStyle = '#fff'; g.fillRect(0, 0, S, S);
+    g.drawImage(c.img, S / 2 + c.ox - d.w / 2, S / 2 + c.oy - d.h / 2, d.w, d.h);
+    g.save(); g.fillStyle = 'rgba(0,0,0,.55)'; g.beginPath(); g.rect(0, 0, S, S); g.arc(S / 2, S / 2, S / 2 - 3, 0, Math.PI * 2, true); g.fill('evenodd'); g.restore();
+    g.strokeStyle = '#fff'; g.lineWidth = 2; g.beginPath(); g.arc(S / 2, S / 2, S / 2 - 3, 0, Math.PI * 2); g.stroke();
+  }
+  function openCrop(file){
+    var r = new FileReader();
+    r.onload = function(){
+      var img = new Image();
+      img.onload = function(){
+        var S = 240; CROP = { img: img, S: S, base: S / Math.min(img.width, img.height), z: 1, ox: 0, oy: 0 };
+        $('acZoom').value = 1; $('acMain').hidden = true; $('acCropBox').hidden = false; cropDraw();
+      };
+      img.onerror = function(){ toast('That file could not be read as a picture'); };
+      img.src = r.result;
+    };
+    r.readAsDataURL(file);
+  }
+  function closeCrop(){ CROP = null; $('acCropBox').hidden = true; $('acMain').hidden = false; }
+  (function wireCrop(){
+    var cv = $('acCv'), drag = null;
+    cv.addEventListener('pointerdown', function(e){ if(!CROP) return; drag = { x: e.clientX, y: e.clientY, ox: CROP.ox, oy: CROP.oy }; cv.setPointerCapture(e.pointerId); });
+    cv.addEventListener('pointermove', function(e){ if(!drag || !CROP) return; var k = CROP.S / cv.getBoundingClientRect().width; CROP.ox = drag.ox + (e.clientX - drag.x) * k; CROP.oy = drag.oy + (e.clientY - drag.y) * k; cropDraw(); });
+    cv.addEventListener('pointerup', function(){ drag = null; });
+    cv.addEventListener('wheel', function(e){ if(!CROP) return; e.preventDefault(); CROP.z = Math.max(1, Math.min(4, CROP.z * (e.deltaY < 0 ? 1.08 : 1 / 1.08))); $('acZoom').value = CROP.z; cropDraw(); }, { passive: false });
+    $('acZoom').addEventListener('input', function(){ if(!CROP) return; CROP.z = +this.value; cropDraw(); });
+    $('acCropNo').onclick = closeCrop;
+    $('acCropOk').onclick = function(){
+      if(!CROP) return; var c = CROP, d = cropSize(), O = 72, k = O / c.S, out = document.createElement('canvas'); out.width = out.height = O;
+      var g = out.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, O, O);
+      g.drawImage(c.img, (c.S / 2 + c.ox - d.w / 2) * k, (c.S / 2 + c.oy - d.h / 2) * k, d.w * k, d.h * k);
+      var q = 0.8, url = out.toDataURL('image/jpeg', q); while(url.length > 6500 && q > 0.3){ q -= 0.1; url = out.toDataURL('image/jpeg', q); }
+      acDraft.avatar = url; acPaint(); closeCrop();
+    };
+  })();
 
   /* ---------- search box for long card lists ("Reports to", "Side links") ---------- */
   function searchable(sel, placeholder){
@@ -2689,35 +2908,35 @@ button.pav{cursor:pointer;margin-left:8px}
   }
   function selPages(){ var r = []; BOOK.pages.forEach(function(p, i){ if(PSEL[p.pid]) r.push(i); }); return r.length ? r : [BOOK.cur]; }
   function clonePage(p){ var c = fromData(JSON.parse(JSON.stringify(p))); c.pid = mk().id; return c; }
-  function addPage(){
+  function addPage(){ if(VIEWER) return;
     var p = fromData({ pname: 'Page ' + (BOOK.pages.length + 1) }); p.brand = JSON.parse(JSON.stringify(state.brand));
     BOOK.pages.splice(BOOK.cur + 1, 0, p); PSEL = {}; PSEL[p.pid] = 1; afterBook(p.pid);
   }
-  function dupPages(){
+  function dupPages(){ if(VIEWER) return;
     var idx = selPages(), keep = state.pid;
     for(var n = idx.length - 1; n >= 0; n--){ var p = BOOK.pages[idx[n]], c = clonePage(p); c.pname = p.pname + ' copy'; BOOK.pages.splice(idx[n] + 1, 0, c); }
     afterBook(keep); toast(idx.length > 1 ? idx.length + ' pages duplicated' : 'Page duplicated');
   }
-  function delPages(){
+  function delPages(){ if(VIEWER) return;
     var idx = selPages(); if(idx.length >= BOOK.pages.length){ toast('The book needs at least one page'); return; }
     if(!confirm('Delete ' + (idx.length > 1 ? idx.length + ' pages' : '“' + BOOK.pages[idx[0]].pname + '”') + '? You can undo with Ctrl+Z.')) return;
     var keep = state.pid, was = BOOK.cur; for(var n = idx.length - 1; n >= 0; n--) BOOK.pages.splice(idx[n], 1);
     PSEL = {}; navStack = navStack.filter(function(x){ return pageIdx(x) >= 0; });
     afterBook(pageIdx(keep) >= 0 ? keep : BOOK.pages[Math.min(idx[0], BOOK.pages.length - 1)].pid);
   }
-  function movePages(d){
+  function movePages(d){ if(VIEWER) return;
     var idx = selPages(), sel = {}, keep = state.pid; idx.forEach(function(i){ sel[i] = 1; });
     var order = d < 0 ? idx.slice() : idx.slice().reverse(), moved = {};
     order.forEach(function(i){ var j = i + d; if(j < 0 || j >= BOOK.pages.length || (sel[j] && !moved[j])) return; var t = BOOK.pages[i]; BOOK.pages[i] = BOOK.pages[j]; BOOK.pages[j] = t; moved[j] = 1; delete sel[i]; sel[j] = 1; });
     afterBook(keep);
   }
-  function copyPages(){ pclip = selPages().map(function(i){ return JSON.parse(JSON.stringify(BOOK.pages[i])); }); toast(pclip.length > 1 ? pclip.length + ' pages copied' : 'Page copied'); }
-  function pastePages(){
+  function copyPages(){ if(VIEWER) return; pclip = selPages().map(function(i){ return JSON.parse(JSON.stringify(BOOK.pages[i])); }); toast(pclip.length > 1 ? pclip.length + ' pages copied' : 'Page copied'); }
+  function pastePages(){ if(VIEWER) return;
     if(!pclip || !pclip.length){ toast('Copy a page first'); return; }
     var keep = state.pid, at = BOOK.cur + 1;
     pclip.forEach(function(p, n){ var c = clonePage(p); c.pname = p.pname + ' copy'; BOOK.pages.splice(at + n, 0, c); }); afterBook(keep);
   }
-  function renamePage(i){
+  function renamePage(i){ if(VIEWER) return;
     var b = $('pgtabs').children[i]; if(!b) return;
     var inp = document.createElement('input'); inp.value = BOOK.pages[i].pname; b.textContent = ''; b.appendChild(inp); inp.focus(); inp.select();
     var done = false; function fin(ok){ if(done) return; done = true; if(ok && inp.value.trim()) BOOK.pages[i].pname = inp.value.trim(); renderTabs(); save(); }
@@ -2782,7 +3001,7 @@ button.pav{cursor:pointer;margin-left:8px}
     var b = e.target.closest('.pgl'); if(!b) return;
     var f = find(b.closest('.card').dataset.id); if(f && f.node.page) goPid(f.node.page, true);
   });
-  function addPageLink(){
+  function addPageLink(){ if(VIEWER) return;
     if(BOOK.pages.length < 2){ toast('Create another page first (＋ at the bottom)'); return; }
     var tg = BOOK.pages[(BOOK.cur + 1) % BOOK.pages.length]; state.hideNotes = false;
     var n = newNote('Page link', 'Go to ' + (tg.pname || 'page') + ' →'); n.kind = 'plain'; n.page = tg.pid; n.pl = 1; n.u = 1; n.tc = '#1a6fd1'; n.fs = 16; n.b = 1;
@@ -2914,6 +3133,7 @@ button.pav{cursor:pointer;margin-left:8px}
   /* ---------- v11: icons, navigator map, scale-safe lines ---------- */
   var NAV = { min: false, lock: false, hidden: false, x: null, y: null }, navT = 0, navMap = null, navDrag = false;
   try { var svd = JSON.parse(localStorage.getItem('org-chart-nav') || 'null'); if(svd) NAV = Object.assign(NAV, svd); } catch(e){}
+  try { if(!localStorage.getItem('org-chart-nav') && window.innerWidth < 760) NAV.hidden = true; } catch(e){}
   function navSave(){ try { localStorage.setItem('org-chart-nav', JSON.stringify(NAV)); } catch(e){} }
   function viewScale(){ var w = $('world'); return w.offsetWidth ? (w.getBoundingClientRect().width / w.offsetWidth) || zoom : zoom; }
 
@@ -3446,8 +3666,9 @@ button.pav{cursor:pointer;margin-left:8px}
 
   /* ---- global lock for cards ---- */
   function GL(){ if(!GLOCK) return false; toast('Cards are locked. Turn off “Lock all cards” in the View menu to change them.'); return true; }
-  function setGlock(v){ GLOCK = !!v; BOOK.glock = GLOCK; glockUI(); save(); toast(GLOCK ? 'All cards locked' : 'Cards unlocked'); }
+  function setGlock(v){ if(VIEWER){ GLOCK = true; BOOK.glock = true; glockUI(); toast('View only: cards stay locked'); return; } GLOCK = !!v; BOOK.glock = GLOCK; glockUI(); save(); toast(GLOCK ? 'All cards locked' : 'Cards unlocked'); }
   function glockUI(){
+    if(VIEWER && !GLOCK){ GLOCK = true; BOOK.glock = true; }
     if(!$('glBadge')) return; $('stage').classList.toggle('glocked', GLOCK);
     var b = $('glBadge'); b.hidden = !GLOCK;
     b.innerHTML = svg('lock') + '<div class="gltip"><b>Cards are locked</b><br>This only prevents accidental changes to the cards: adding, removing, moving or re-ordering them. You can still view, zoom, search and edit text. Turn it on or off from <b>View ▸ Lock all cards</b> (or press K). Click this icon to unlock.</div>';
@@ -3482,10 +3703,233 @@ button.pav{cursor:pointer;margin-left:8px}
   });
   glockUI(); decor();
 
+  var TH_DICT = {
+    /* chrome */
+    'File':'ไฟล์','Edit':'แก้ไข','Insert':'แทรก','View':'มุมมอง','Menu':'เมนู','Tools':'เครื่องมือ','Shortcuts':'ปุ่มลัด','Keyboard shortcuts (?)':'ปุ่มลัด (?)',
+    'New from example':'สร้างใหม่จากตัวอย่าง','Open data file…':'เปิดไฟล์ข้อมูล…','Save as':'บันทึกเป็น','PNG image':'รูปภาพ PNG','JPG image':'รูปภาพ JPG','Editable HTML':'HTML ที่แก้ไขได้','Data file (JSON)':'ไฟล์ข้อมูล (JSON)','Print or save as PDF':'พิมพ์หรือบันทึกเป็น PDF',
+    'Undo':'เลิกทำ','Undo (Ctrl+Z)':'เลิกทำ (Ctrl+Z)','Redo':'ทำใหม่','Redo (Ctrl+Y)':'ทำใหม่ (Ctrl+Y)','Duplicate card':'ทำสำเนาการ์ด','Copy card':'คัดลอกการ์ด','Cut card':'ตัดการ์ด','Paste under selected':'วางไว้ใต้รายการที่เลือก','Paste under':'วางไว้ใต้',
+    'Person card below selected':'การ์ดบุคคลใต้รายการที่เลือก','Department card below selected':'การ์ดแผนกใต้รายการที่เลือก','Person to the left':'บุคคลทางซ้าย','Person to the right':'บุคคลทางขวา','Transparent bubble note':'โน้ตฟองโปร่งใส','Text note without frame':'โน้ตข้อความไม่มีกรอบ','Image…':'รูปภาพ…','Page link text':'ข้อความลิงก์หน้า','Note':'โน้ต',
+    'Zoom in':'ซูมเข้า','Zoom out':'ซูมออก','Zoom in (+)':'ซูมเข้า (+)','Zoom out (-)':'ซูมออก (-)','Fit to screen':'พอดีหน้าจอ','Fit whole chart':'พอดีทั้งแผนผัง','Reset zoom':'รีเซ็ตการซูม','Reset (0)':'รีเซ็ต (0)','Show / hide map (M)':'แสดง/ซ่อนแผนที่ (M)','Note tray (T)':'ถาดโน้ต (T)','Lock all cards (K)':'ล็อกการ์ดทั้งหมด (K)','Hide all notes':'ซ่อนโน้ตทั้งหมด','Collapse all teams':'ยุบทุกทีม','Expand all teams':'ขยายทุกทีม',
+    'Collapse or expand all teams':'ยุบหรือขยายทุกทีม','Dark or light mode':'โหมดมืดหรือสว่าง','Switch dark or light mode':'สลับโหมดมืด/สว่าง','Select mode':'โหมดเลือก','Drag on the background to select several cards (Alt or Shift + drag also works)':'ลากบนพื้นหลังเพื่อเลือกหลายการ์ด (Alt หรือ Shift + ลาก ก็ได้)','Lock all cards':'ล็อกการ์ดทั้งหมด','Lock or unlock all cards (K)':'ล็อก/ปลดล็อกการ์ดทั้งหมด (K)','Lock or unlock all cards':'ล็อก/ปลดล็อกการ์ดทั้งหมด',
+    'Search name or position':'ค้นหาชื่อหรือตำแหน่ง','Search staff':'ค้นหาบุคลากร','Previous result':'ผลลัพธ์ก่อนหน้า','Next result':'ผลลัพธ์ถัดไป','Chart title':'ชื่อแผนผัง','Org Chart Maker':'ตัวสร้างผังองค์กร','People online':'ผู้ใช้ที่ออนไลน์','View only':'ดูอย่างเดียว','Switch language':'เปลี่ยนภาษา',
+    'Cards are locked. Click to unlock.':'การ์ดถูกล็อกอยู่ คลิกเพื่อปลดล็อก','Chart overview: click or drag to move around':'ภาพรวมแผนผัง: คลิกหรือลากเพื่อเลื่อนดู','Navigator map':'แผนที่นำทาง','Map':'แผนที่','Minimise map':'ย่อแผนที่','Minimise or restore the map':'ย่อ/คืนขนาดแผนที่','Lock map position':'ล็อกตำแหน่งแผนที่','Lock or unlock the position of this map':'ล็อก/ปลดล็อกตำแหน่งของแผนที่นี้',
+    'Note tray':'ถาดโน้ต','Open or close the note tray (T)':'เปิด/ปิดถาดโน้ต (T)','Create a group (folder)':'สร้างกลุ่ม (โฟลเดอร์)','New group':'กลุ่มใหม่','Drag notes or pictures here. Make groups to organise them. Drag to reorder.':'ลากโน้ตหรือรูปมาวางที่นี่ สร้างกลุ่มเพื่อจัดระเบียบ ลากเพื่อเรียงลำดับใหม่',
+    'Empty. Drag a note or a picture from the chart onto this tray, or drop picture files here.':'ว่างเปล่า ลากโน้ตหรือรูปจากแผนผังมาวางบนถาดนี้ หรือวางไฟล์รูปที่นี่','Empty. Drag a note or an image from the chart onto this tray to store it here.':'ว่างเปล่า ลากโน้ตหรือรูปจากแผนผังมาวางบนถาดนี้เพื่อเก็บไว้','Drop pictures here':'วางรูปภาพที่นี่','Drop notes or pictures here':'วางโน้ตหรือรูปภาพที่นี่','Drag picture files in':'ลากไฟล์รูปภาพมาวาง','Only picture files can be dropped here':'วางได้เฉพาะไฟล์รูปภาพเท่านั้น',
+    'Back':'ย้อนกลับ','Back to the previous page':'กลับไปหน้าก่อนหน้า','Pages':'หน้า','New page':'หน้าใหม่','New blank page':'หน้าว่างใหม่','Page link':'ลิงก์หน้า','Page menu':'เมนูหน้า','Rename page':'เปลี่ยนชื่อหน้า','Duplicate page':'ทำสำเนาหน้า','Delete page':'ลบหน้า','Move page':'ย้ายหน้า','Switch page':'สลับหน้า','Select several pages':'เลือกหลายหน้า',
+    /* empty chart */
+    'The chart is empty. Start with the top role.':'แผนผังยังว่างอยู่ เริ่มจากตำแหน่งบนสุด','Add the top role':'เพิ่มตำแหน่งบนสุด','Click to add a logo':'คลิกเพื่อเพิ่มโลโก้','Logo':'โลโก้',
+    /* panel */
+    'Edit card':'แก้ไขการ์ด','Edit staff member':'แก้ไขข้อมูลบุคลากร','Card type':'ประเภทการ์ด','Person (with picture)':'บุคคล (มีรูปภาพ)','Department (text only)':'แผนก (ข้อความอย่างเดียว)','Upload picture':'อัปโหลดรูปภาพ','Edit picture':'แก้ไขรูปภาพ','Male':'ชาย','Female':'หญิง','Remove picture':'นำรูปภาพออก','Name':'ชื่อ','Title':'หัวเรื่อง','Position':'ตำแหน่ง','Description':'คำอธิบาย',
+    'Link (website, email or phone)':'ลิงก์ (เว็บไซต์ อีเมล หรือโทรศัพท์)','Enter a website, email address or phone number':'ใส่เว็บไซต์ อีเมล หรือเบอร์โทรศัพท์','Open another page (sub-chart link)':'เปิดหน้าอื่น (ลิงก์แผนผังย่อย)','No link':'ไม่มีลิงก์','Reports to':'รายงานต่อ','Order among siblings':'ลำดับในระดับเดียวกัน','Card colour':'สีการ์ด','Colour wheel':'วงล้อสี','Hex colour code':'รหัสสี Hex','Pick colour':'เลือกสี','Reset':'รีเซ็ต',
+    'Text style':'รูปแบบข้อความ','Default':'ค่าเริ่มต้น','Font size':'ขนาดตัวอักษร','Typeface':'แบบอักษร','Bold':'ตัวหนา','Italic':'ตัวเอียง','Underline':'ขีดเส้นใต้','Strikethrough':'ขีดฆ่า','Left':'ซ้าย','Center':'กึ่งกลาง','Right':'ขวา','Sans':'ซานส์','Serif':'เซอริฟ','Mono':'โมโน','Handwritten':'ลายมือ','Text formatting':'การจัดรูปแบบข้อความ','Text colour':'สีข้อความ',
+    'Line to manager':'เส้นถึงหัวหน้า','Line colour':'สีเส้น','Line type':'ชนิดเส้น','Solid':'เส้นทึบ','Dashed':'เส้นประ','Dotted':'เส้นจุด','Double':'เส้นคู่','No arrows':'ไม่มีลูกศร','Arrow at start':'ลูกศรต้นทาง','Arrow at end':'ลูกศรปลายทาง','Both ends':'ทั้งสองปลาย','Arrow head':'หัวลูกศร','Solid head':'หัวทึบ','Open head':'หัวเปิด','Dot head':'หัวจุด','Arrows':'ลูกศร','Label on the line':'ป้ายบนเส้น',
+    'Team layout':'การจัดวางทีม','Compact (stack vertically when possible)':'กะทัดรัด (เรียงซ้อนแนวตั้งเมื่อทำได้)','Always side by side':'เรียงข้างกันเสมอ','Side links (co-reporting roles)':'ลิงก์ด้านข้าง (ตำแหน่งรายงานร่วม)','Link to':'ลิงก์ไปยัง','Add link':'เพิ่มลิงก์','Search a card to link to…':'ค้นหาการ์ดที่จะเชื่อม…','Search who this person reports to…':'ค้นหาผู้ที่บุคคลนี้รายงานต่อ…','Type to search…':'พิมพ์เพื่อค้นหา…',
+    'Add person':'เพิ่มบุคคล','Add dept card':'เพิ่มการ์ดแผนก','Add person left':'เพิ่มบุคคลทางซ้าย','Add person right':'เพิ่มบุคคลทางขวา','Add person below':'เพิ่มบุคคลด้านล่าง','Duplicate':'ทำสำเนา','Copy':'คัดลอก','Cut':'ตัด','Paste':'วาง','Delete this person':'ลบบุคคลนี้','Delete':'ลบ','Delete card':'ลบการ์ด','Remove':'นำออก','Rename':'เปลี่ยนชื่อ','Edit name':'แก้ไขชื่อ',
+    'Show team':'แสดงทีม','Hide team':'ซ่อนทีม','Lock or unlock team':'ล็อก/ปลดล็อกทีม',
+    /* account, cloud */
+    'Account settings':'ตั้งค่าบัญชี','Display name (shown to other people)':'ชื่อที่แสดง (คนอื่นมองเห็น)','Your colour (pointer and card tag)':'สีของคุณ (ตัวชี้และป้ายบนการ์ด)','Cancel':'ยกเลิก','Save':'บันทึก','Close':'ปิด','Close (Esc)':'ปิด (Esc)','Profile saved':'บันทึกโปรไฟล์แล้ว','Guest':'ผู้เยี่ยมชม','That file could not be read as a picture':'ไม่สามารถอ่านไฟล์นั้นเป็นรูปภาพได้',
+    'Email':'อีเมล','Password':'รหัสผ่าน','Sign in':'เข้าสู่ระบบ','Sign out':'ออกจากระบบ',
+    /* picture editor */
+    'Picture editor':'ตัวแก้ไขรูปภาพ','Apply crop':'ใช้การครอป','Apply opacity':'ใช้ความโปร่งใส','Apply rotation':'ใช้การหมุน','Black and white':'ขาวดำ','Brighter':'สว่างขึ้น','Darker':'เข้มขึ้น','Browser full screen':'เต็มหน้าจอเบราว์เซอร์','Browser full screen (F)':'เต็มหน้าจอเบราว์เซอร์ (F)','Brush':'แปรง','Eraser':'ยางลบ','Compress picture':'บีบอัดรูปภาพ','Crop':'ครอป','Square crop':'ครอปสี่เหลี่ยมจัตุรัส','Colour':'สี','Filters':'ฟิลเตอร์','Flip horizontally':'พลิกแนวนอน','Flip vertically':'พลิกแนวตั้ง','Full screen preview':'แสดงตัวอย่างเต็มหน้าจอ','Magnifier: zoom and move the picture':'แว่นขยาย: ซูมและเลื่อนรูปภาพ','Zoom and move the picture (Z)':'ซูมและเลื่อนรูปภาพ (Z)','Move left':'เลื่อนไปซ้าย','Move right':'เลื่อนไปขวา','Negative':'ฟิล์มเนกาทีฟ','Negative (invert colours)':'เนกาทีฟ (กลับสี)','Next':'ถัดไป','Next (→)':'ถัดไป (→)','Previous':'ก่อนหน้า','Previous (←)':'ก่อนหน้า (←)','Opacity':'ความโปร่งใส','Rotate freely':'หมุนอิสระ','Rotate left':'หมุนซ้าย','Rotate right':'หมุนขวา','Rotation in degrees':'องศาการหมุน','Rounded':'มุมมน','Sepia':'ซีเปีย','Size':'ขนาด','Skip all remaining':'ข้ามทั้งหมดที่เหลือ','Transform':'แปลงรูป','Use this picture':'ใช้รูปนี้','Edit picture…':'แก้ไขรูปภาพ…','Upload a different picture':'อัปโหลดรูปอื่น','Upload a different picture…':'อัปโหลดรูปอื่น…','Upload a picture first':'อัปโหลดรูปภาพก่อน','Drag on the picture to choose the area to keep':'ลากบนรูปเพื่อเลือกพื้นที่ที่ต้องการเก็บ','Apply or reset the rotation first':'ใช้หรือรีเซ็ตการหมุนก่อน','Lock aspect ratio':'ล็อกสัดส่วน','Unlock aspect ratio':'ปลดล็อกสัดส่วน','Invert in dark mode: turn off':'กลับสีในโหมดมืด: ปิด','Invert in dark mode: turn on':'กลับสีในโหมดมืด: เปิด','That spot is transparent':'ตำแหน่งนั้นโปร่งใส',
+    'Changing this restarts the editor from the original picture and discards your edits so far. Continue?':'การเปลี่ยนตัวเลือกนี้จะเริ่มตัวแก้ไขใหม่จากรูปต้นฉบับและทิ้งการแก้ไขที่ทำไว้ ดำเนินการต่อหรือไม่?',
+    /* notes, groups, tray, menus */
+    'New note':'โน้ตใหม่','New department':'แผนกใหม่','Note name':'ชื่อโน้ต','Note colour':'สีโน้ต','Change note style':'เปลี่ยนรูปแบบโน้ต','Link this note to a page':'ผูกโน้ตนี้กับหน้า','Link to page':'ลิงก์ไปยังหน้า','Open the Aa row on the link to choose another page':'เปิดแถว Aa ที่ลิงก์เพื่อเลือกหน้าอื่น','Type here':'พิมพ์ที่นี่','Delete note':'ลบโน้ต','Delete image':'ลบรูปภาพ','Delete the image':'ลบภาพนี้','Click an image':'คลิกที่รูปภาพ',
+    'Group':'กลุ่ม','Group colour':'สีกลุ่ม','Group options':'ตัวเลือกกลุ่ม','Delete group and its items':'ลบกลุ่มและรายการในกลุ่ม','Ungroup (keep the items)':'เลิกจัดกลุ่ม (เก็บรายการไว้)','Move out of the group':'ย้ายออกจากกลุ่ม','Move to note tray':'ย้ายไปถาดโน้ต','Move to the note tray':'ย้ายไปยังถาดโน้ต','Moved to the note tray':'ย้ายไปถาดโน้ตแล้ว','Put back on the chart':'วางกลับบนแผนผัง','Click for full screen':'คลิกเพื่อดูเต็มหน้าจอ','Click to open or close. Double-click the name to rename.':'คลิกเพื่อเปิด/ปิด ดับเบิลคลิกที่ชื่อเพื่อเปลี่ยนชื่อ','Click to rename':'คลิกเพื่อเปลี่ยนชื่อ','More options':'ตัวเลือกเพิ่มเติม','Move up':'เลื่อนขึ้น','Move down':'เลื่อนลง','Move selection':'ย้ายรายการที่เลือก','Move around':'เลื่อนดู','Zoom, pan':'ซูม, เลื่อน','Scroll, drag':'เลื่อน, ลาก',
+    'Hide all notes & images':'ซ่อนโน้ตและรูปภาพทั้งหมด','Show all notes & images':'แสดงโน้ตและรูปภาพทั้งหมด','Show or hide the map':'แสดงหรือซ่อนแผนที่','Show or hide the note tray':'แสดงหรือซ่อนถาดโน้ต','Show or hide this list':'แสดงหรือซ่อนรายการนี้',
+    /* context menu + shortcuts */
+    'Copy   Ctrl+C':'คัดลอก   Ctrl+C','Cut   Ctrl+X':'ตัด   Ctrl+X','Paste   Ctrl+V':'วาง   Ctrl+V','Paste after   Ctrl+V':'วางต่อท้าย   Ctrl+V','Paste here':'วางที่นี่','Paste under this card':'วางไว้ใต้การ์ดนี้','Duplicate   Ctrl+D':'ทำสำเนา   Ctrl+D','Delete   Del':'ลบ   Del','Rename   F2':'เปลี่ยนชื่อ   F2','Full screen preview   Enter':'แสดงเต็มหน้าจอ   Enter','Move left   [':'เลื่อนไปซ้าย   [','Move right   ]':'เลื่อนไปขวา   ]',
+    'Add or remove a card':'เพิ่มหรือลบการ์ด','Duplicate, copy, cut, paste':'ทำสำเนา คัดลอก ตัด วาง','Arrow keys':'ปุ่มลูกศร','Box-select cards':'ลากเลือกหลายการ์ด','Select all cards':'เลือกการ์ดทั้งหมด','Select several':'เลือกหลายรายการ','Select it':'เลือกรายการนี้','Deselect':'ยกเลิกการเลือก','Right-click':'คลิกขวา','Enter or double-click':'Enter หรือดับเบิลคลิก','Alt or Shift + drag':'Alt หรือ Shift + ลาก','Cards':'การ์ด','Images, notes, tray':'รูปภาพ โน้ต ถาด','Files':'ไฟล์ต่าง ๆ',
+    'Right-click a card for more actions. You can also drag one card onto another to make that person report to them. Changes save in this browser automatically; use Export file to keep a copy.':'คลิกขวาที่การ์ดเพื่อดูการทำงานเพิ่มเติม หรือลากการ์ดหนึ่งไปวางบนอีกใบเพื่อให้คนนั้นรายงานต่อผู้ที่วางทับ การเปลี่ยนแปลงจะบันทึกในเบราว์เซอร์นี้อัตโนมัติ ใช้ Export file เพื่อเก็บสำเนา',
+    /* toasts */
+    'Cards are locked. Turn off “Lock all cards” in the View menu to change them.':'การ์ดถูกล็อกอยู่ ปิด “ล็อกการ์ดทั้งหมด” ในเมนูมุมมองเพื่อแก้ไข','All cards locked':'ล็อกการ์ดทั้งหมดแล้ว','Cards unlocked':'ปลดล็อกการ์ดแล้ว','Unlocked':'ปลดล็อกแล้ว','Copied':'คัดลอกแล้ว','Copy a page first':'คัดลอกหน้าก่อน','Copy a picture first':'คัดลอกรูปภาพก่อน','Copy an image first':'คัดลอกภาพก่อน','Copy or cut a card first':'คัดลอกหรือตัดการ์ดก่อน','Copy or cut something in the tray first':'คัดลอกหรือตัดรายการในถาดก่อน','Image copied':'คัดลอกรูปภาพแล้ว','Image cut':'ตัดรูปภาพแล้ว','Page copied':'คัดลอกหน้าแล้ว','Page duplicated':'ทำสำเนาหน้าแล้ว','Order updated':'อัปเดตลำดับแล้ว','Reporting line updated':'อัปเดตสายการรายงานแล้ว','Chart exported':'ส่งออกแผนผังแล้ว','Chart imported':'นำเข้าแผนผังแล้ว',
+    'Select a card first':'เลือกการ์ดก่อน','Select a card below the top card':'เลือกการ์ดใต้การ์ดบนสุด','The top card cannot be cut':'ไม่สามารถตัดการ์ดบนสุดได้','The top card cannot be deleted here':'ไม่สามารถลบการ์ดบนสุดที่นี่ได้','The top card has no left or right side':'การ์ดบนสุดไม่มีด้านซ้ายหรือขวา','The book needs at least one page':'ต้องมีอย่างน้อยหนึ่งหน้า','That page no longer exists':'หน้านั้นไม่มีอยู่แล้ว','That file is not a chart exported from this page':'ไฟล์นั้นไม่ใช่แผนผังที่ส่งออกจากหน้านี้',
+    'Image export failed. Use Print and choose Save as PDF.':'ส่งออกรูปภาพไม่สำเร็จ ให้ใช้พิมพ์แล้วเลือกบันทึกเป็น PDF','This browser blocked image export. Use Print and choose Save as PDF.':'เบราว์เซอร์นี้บล็อกการส่งออกรูปภาพ ให้ใช้พิมพ์แล้วเลือกบันทึกเป็น PDF',
+    'Replace the current chart with the example? Export first if you want to keep it.':'ต้องการแทนที่แผนผังปัจจุบันด้วยตัวอย่างหรือไม่ ส่งออกไว้ก่อนหากต้องการเก็บ',
+    'Copy / cut / paste under':'คัดลอก / ตัด / วางไว้ใต้','Move left / right':'เลื่อนซ้าย / ขวา','Search':'ค้นหา','Zoom in / out / fit':'ซูมเข้า / ออก / พอดี','Pages (click a page tab first)':'หน้า (คลิกแท็บหน้าก่อน)','Copy / paste page':'คัดลอก / วางหน้า','Previous / next in preview':'ก่อนหน้า / ถัดไปในหน้าตัวอย่าง','Add pictures (several are queued)':'เพิ่มรูปภาพ (หลายรูปจะเข้าคิว)','Undo / redo':'เลิกทำ / ทำใหม่','Alt+click':'Alt+คลิก','Alt + click':'Alt + คลิก','Picture editor':'ตัวแก้ไขรูปภาพ',
+    'Cards are locked':'การ์ดถูกล็อกอยู่','This only prevents accidental changes to the cards: adding, removing, moving or re-ordering them. You can still view, zoom, search and edit text. Turn it on or off from':'ช่วยป้องกันการเปลี่ยนแปลงโดยไม่ตั้งใจ ได้แก่ เพิ่ม ลบ ย้าย หรือจัดลำดับการ์ดใหม่ แต่ยังดู ซูม ค้นหา และแก้ไขข้อความได้ เปิดหรือปิดได้จาก','View ▸ Lock all cards':'มุมมอง ▸ ล็อกการ์ดทั้งหมด','(or press K). Click this icon to unlock.':'(หรือกดปุ่ม K) คลิกไอคอนนี้เพื่อปลดล็อก','Unlock all cards (K)':'ปลดล็อกการ์ดทั้งหมด (K)',
+    'Locked: stays as it is when you collapse all (click to unlock)':'ล็อกอยู่: คงสภาพเดิมเมื่อยุบทั้งหมด (คลิกเพื่อปลดล็อก)','Lock: keep this team as it is when you collapse all':'ล็อก: คงทีมนี้ไว้เมื่อยุบทั้งหมด','Locked: collapse all will skip this team':'ล็อกแล้ว: การยุบทั้งหมดจะข้ามทีมนี้',
+    'On: saved smaller (pictures up to 800 px, profile photos 240 px) with lower quality.':'เปิด: บันทึกให้เล็กลง (รูปภาพสูงสุด 800 px รูปโปรไฟล์ 240 px) คุณภาพต่ำลง','Off: original size and quality are kept. The chart file becomes much larger.':'ปิด: คงขนาดและคุณภาพเดิม ไฟล์แผนผังจะใหญ่ขึ้นมาก','Observing':'กำลังสังเกตการณ์','View only: cards stay locked':'โหมดดูอย่างเดียว: การ์ดจะถูกล็อกเสมอ','Crop picture':'ครอปรูปภาพ','Drag to move, use the slider to zoom':'ลากเพื่อเลื่อน ใช้แถบเลื่อนเพื่อซูม','Use crop':'ใช้ส่วนที่ครอป','Zoom':'ซูม','Save as image':'บันทึกเป็นรูปภาพ','Format':'รูปแบบไฟล์','1× (small)':'1× (เล็ก)','2× (sharp)':'2× (คมชัด)','3× (very large)':'3× (ใหญ่มาก)','Quality':'คุณภาพ','Preparing preview…':'กำลังเตรียมตัวอย่าง…','Preview':'ตัวอย่าง','Image saved':'บันทึกรูปภาพแล้ว',
+'Show map':'แสดงแผนที่'
+  };
+  var TH_PAIRS = [
+    ['Connecting…','กำลังเชื่อมต่อ…'],['Sign out','ออกจากระบบ'],['Saved','บันทึกแล้ว'],['Saving…','กำลังบันทึก…'],['Edited • saving…','มีการแก้ไข • กำลังบันทึก…'],
+    ['Synced with the latest data','ซิงก์ข้อมูลล่าสุดแล้ว'],['Merged others’ edits • saving…','รวมการแก้ไขของคนอื่นแล้ว • กำลังบันทึก…'],['Save failed • will retry automatically','บันทึกไม่สำเร็จ • จะลองใหม่อัตโนมัติ'],
+    ['Loading the chart…','กำลังโหลดแผนผัง…'],['Connected','เชื่อมต่อแล้ว'],['Connected • live sync','เชื่อมต่อแล้ว • ซิงก์สด'],['Realtime dropped • reconnecting…','Realtime หลุด • กำลังเชื่อมต่อใหม่…'],
+    ['Offline • your edits are kept and sent when you are back online','ออฟไลน์ • การแก้ไขจะถูกเก็บไว้และส่งเมื่อกลับมาออนไลน์'],['Could not connect','เชื่อมต่อไม่ได้ งง'],['Set SUPABASE_URL and SUPABASE_KEY in the HTML file first','ต้องตั้งค่า SUPABASE_URL และ SUPABASE_KEY ในไฟล์ HTML ก่อนใช้งาน'],
+    ['Supabase is not configured','ยังไม่ได้ตั้งค่า Supabase'],['Signing you in…','ขอยาสเข้าสู่ระบบละน้า…'],['Signed out','ออกจากระบบละเด้อ'],['Please sign in','เชิญเข้าสู่ระบบ pls fr fr'],['One moment…','สักครู่นาจา…'],
+    ['OK, let me in','เค ขอเข้าหน่อย'],['Friends and colleagues, please sign in first >_O','เขยใภ้/เพื่อนๆทุกท่าน โปรดเข้าสู่ระบบก่อนนะคะ >_O'],['Ooh, this site is invite-only ♥','อุอิ เว็บนี้เป็นแบบ invite นาจา ♥'],
+    ['Merged with another user’s edits.','รวมการแก้ไขของผู้ใช้อื่นแล้ว'],['Sign in','เข้าสู่ระบบ'],['Email','อีเมล'],['Password','รหัสผ่าน']
+  ];
+  var TH_PAT = [
+    ['• #1 online','• ออนไลน์ #1 คน'],['Cloud save failed: $1','บันทึกคลาวด์ไม่สำเร็จ: $1'],['Oops! Sign-in failed: $1','อ้าว! เข้าสู่ระบบไม่สำเร็จ?: $1'],
+    ['Oops, the chart could not be loaded: $1\nCheck the Supabase settings, the table, RLS and the row id=main','อ้าว โหลดแผนผังไม่สำเร็จ: $1\nตรวจสอบการตั้งค่า Supabase, ตาราง, RLS และแถว id=main'],
+    ['Merged with another user’s edits. #1 field(s) were edited by both of you; yours were kept.','รวมการแก้ไขของผู้ใช้อื่นแล้ว มี #1 ช่องที่แก้ไขพร้อมกัน ระบบเก็บของคุณไว้'],
+    ['Updated by $1','อัปเดตโดย $1'],['Saved on this device only: $1','บันทึกในอุปกรณ์นี้เท่านั้น: $1'],['$1 (you) — account settings','$1 (คุณ) — ตั้งค่าบัญชี'],['$1 is online','$1 ออนไลน์อยู่'],['$1 is editing','$1 กำลังแก้ไข'],['$1 is editing “$2”','$1 กำลังแก้ไข “$2”'],['$1 ✎ editing','$1 ✎ กำลังแก้ไข'],
+    ['No card matches “$1”','ไม่พบการ์ดที่ตรงกับ “$1”'],['#1 more — keep typing to narrow down','อีก #1 รายการ — พิมพ์เพิ่มเพื่อกรอง'],
+    ['#1 cards selected (edits apply to all)','เลือก #1 การ์ด (การแก้ไขจะใช้กับทั้งหมด)'],['#1 of #2 (this card)','อันดับ #1 จาก #2 (การ์ดนี้)'],['#1 of #2','อันดับ #1 จาก #2'],
+    ['#1 pages duplicated','ทำสำเนา #1 หน้าแล้ว'],['#1 pages copied','คัดลอก #1 หน้าแล้ว'],['#1 cards copied','คัดลอก #1 การ์ดแล้ว'],['#1 pictures copied','คัดลอก #1 รูปภาพแล้ว'],
+    ['Delete #1 cards (including their teams)?','ลบ #1 การ์ด (รวมทีมของการ์ดเหล่านั้น) หรือไม่?'],['Delete this group and its #1 items?','ลบกลุ่มนี้และรายการ #1 รายการในกลุ่มหรือไม่?'],['Delete #1 pages? You can undo with Ctrl+Z.','ลบ #1 หน้าหรือไม่? เลิกทำได้ด้วย Ctrl+Z'],['Delete “$1”? You can undo with Ctrl+Z.','ลบ “$1” หรือไม่? เลิกทำได้ด้วย Ctrl+Z'],
+    ['Hide all notes & images (#1)','ซ่อนโน้ตและรูปภาพทั้งหมด (#1)'],['Show all notes & images (#1)','แสดงโน้ตและรูปภาพทั้งหมด (#1)'],['#1 of #2 · before $3','อันดับ #1 จาก #2 · ก่อน $3'],['To $1','ถึง $1'],['From $1 (arrow “start” is at them)','จาก $1 (ลูกศร “ต้นทาง” อยู่ที่ฝั่งเขา)'],
+    ['Open page: $1','เปิดหน้า: $1'],['Move to group: $1','ย้ายไปกลุ่ม: $1'],['Logo size #1','ขนาดโลโก้ #1'],['Style: $1','รูปแบบ: $1'],['Align $1','จัดแนว $1']
+  ];
+
+  /* ================= language switch (English / ไทย) ================= */
+  var LANG = 'en', I18N_ON = false, i18nBusy = false, I18N_FWD = {}, I18N_REV = {}, I18N_PAT = [];
+  try { LANG = localStorage.getItem('org-chart-lang') || ((navigator.language || '').toLowerCase().indexOf('th') === 0 ? 'th' : 'en'); } catch(e){}
+  (function buildI18n(){
+    Object.keys(TH_DICT).forEach(function(k){ I18N_FWD[k] = TH_DICT[k]; });
+    TH_PAIRS.forEach(function(p){ I18N_FWD[p[0]] = p[1]; });
+    Object.keys(I18N_FWD).forEach(function(k){ I18N_REV[I18N_FWD[k]] = k; });
+    function esc(s){ return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+    function rx(tpl){ return new RegExp('^' + esc(tpl).replace(/\\\$(\d)/g, '([\\s\\S]+?)').replace(/#(\d)/g, '(\\d+)') + '$'); }
+    function fill(tpl, m){ return tpl.replace(/[$#](\d)/g, function(_, i){ return m[+i] === undefined ? '' : m[+i]; }); }
+    TH_PAT.forEach(function(p){ I18N_PAT.push({ en: rx(p[0]), th: rx(p[1]), enT: p[0], thT: p[1], fill: fill }); });
+  })();
+  function tr(str){
+    if(typeof str !== 'string' || !str) return str;
+    var t = str.trim(); if(!t) return str;
+    var map = LANG === 'th' ? I18N_FWD : I18N_REV, hit = map.hasOwnProperty(t) ? map[t] : undefined;
+    if(hit === undefined){
+      for(var i = 0; i < I18N_PAT.length; i++){
+        var P = I18N_PAT[i], m = (LANG === 'th' ? P.en : P.th).exec(t);
+        if(m){ hit = P.fill(LANG === 'th' ? P.thT : P.enT, m); break; }
+      }
+    }
+    if(hit === undefined) return str;
+    return str.slice(0, str.indexOf(t)) + hit + str.slice(str.indexOf(t) + t.length);
+  }
+  var I18N_SKIP_TXT = '#chart,#notes,#imgs,#brand,#title,#lines,#lines2,#peerLayer,#curLayer,#peers,#pgtabs .pg,#trayList .tnote,.tgname,#pParent,#lnTarget,#langBtn,.ss-it,textarea,[contenteditable="true"],script,style,.pcur';
+  var I18N_SKIP_ATTR = '.card,#lines,#lines2,#peerLayer,#curLayer,.pcur,.ptag';
+  function i18nNode(n){
+    if(n.nodeType === 3){
+      var p = n.parentElement; if(!p || p.closest(I18N_SKIP_TXT)) return;
+      var r = tr(n.nodeValue); if(r !== n.nodeValue) n.nodeValue = r;
+    } else if(n.nodeType === 1){
+      if(n.closest && n.closest('#lines,#lines2,#peerLayer,#curLayer,.pcur')) return;
+      if(!(n.matches && n.matches(I18N_SKIP_ATTR))) ['title', 'placeholder', 'aria-label', 'alt'].forEach(function(a){ var v = n.getAttribute(a); if(v){ var r = tr(v); if(r !== v) n.setAttribute(a, r); } });
+      for(var c = n.firstChild; c; c = c.nextSibling) i18nNode(c);
+    }
+  }
+  function i18nRun(root){ if(i18nBusy) return; i18nBusy = true; try { i18nNode(root || document.body); } finally { i18nBusy = false; } }
+  function applyLang(lang, silent){
+    LANG = lang === 'th' ? 'th' : 'en';
+    try { localStorage.setItem('org-chart-lang', LANG); } catch(e){}
+    document.documentElement.lang = LANG;
+    document.documentElement.style.setProperty('--i18n-drop', '"' + (LANG === 'th' ? I18N_FWD['Drop pictures here'] : 'Drop pictures here') + '"');
+    var b = $('langBtn'); if(b){ b.textContent = LANG === 'th' ? 'EN' : 'ไทย'; b.title = LANG === 'th' ? 'Switch to English' : 'เปลี่ยนเป็นภาษาไทย'; b.setAttribute('aria-label', b.title); }
+    i18nRun(document.body);
+    try { renderPeers(); renderPanel(); renderTray(); renderTabs(); } catch(e){}
+    if(!silent) toast(LANG === 'th' ? 'เปลี่ยนเป็นภาษาไทยแล้ว' : 'Switched to English');
+  }
+  new MutationObserver(function(list){
+    if(i18nBusy) return; i18nBusy = true;
+    try {
+      list.forEach(function(m){
+        if(m.type === 'childList') m.addedNodes.forEach(function(n){ i18nNode(n); });
+        else if(m.type === 'characterData') i18nNode(m.target);
+        else if(m.type === 'attributes') i18nNode(m.target);
+      });
+    } finally { i18nBusy = false; }
+  }).observe(document.body, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['title', 'placeholder', 'aria-label'] });
+  (function wrapDialogs(){
+    var c = window.confirm, a = window.alert, p = window.prompt;
+    window.confirm = function(m){ return c.call(window, tr(String(m))); };
+    window.alert = function(m){ return a.call(window, tr(String(m))); };
+    window.prompt = function(m, d){ return p.call(window, tr(String(m)), d); };
+  })();
+  $('langBtn').onclick = function(){ applyLang(LANG === 'th' ? 'en' : 'th'); };
+
+  /* ================= read-only viewer ================= */
+  var VIEWER = false;
+  function viewerWanted(u){
+    var am = (u && u.app_metadata) || {};
+    return am.role === 'viewer' || /[?&]view=1\b/.test(location.search);
+  }
+  function setViewer(on){
+    VIEWER = !!on; document.body.classList.toggle('viewer', VIEWER);
+    if(VIEWER){ GLOCK = true; BOOK.glock = true; try { glockUI(); } catch(e){} }
+    $('title').readOnly = VIEWER; $('viewBadge').hidden = !VIEWER;
+    if(VIEWER){
+      selId = null; MSET = {}; try { renderChart(); renderPanel(); } catch(e){}
+      if($('stage').classList) $('stage').classList.remove('glocked');
+    }
+  }
+  (function wireViewer(){
+    var ST = '#stage', OK_CARD = '.tg,.pgl,.lk,a,button.pgl';
+    function block(e){ e.preventDefault(); e.stopImmediatePropagation(); }
+    document.addEventListener('click', function(e){
+      if(!VIEWER) return; var t = e.target; if(!t.closest) return;
+      if(t.closest(OK_CARD)) return;
+      if(t.closest('#chart .card,.brand,.pimg,#imgs')) block(e);
+    }, true);
+    window.addEventListener('contextmenu', function(e){ if(VIEWER){ e.preventDefault(); e.stopPropagation(); } }, true);
+    document.addEventListener('copy', function(e){ if(VIEWER && !(e.target.closest && e.target.closest('#q'))) e.preventDefault(); }, true);
+    document.addEventListener('selectstart', function(e){ if(!VIEWER) return; var t = e.target && (e.target.nodeType === 3 ? e.target.parentElement : e.target); if(!(t && t.closest && t.closest('#q'))) e.preventDefault(); }, true);
+    ['dblclick', 'dragstart', 'drop', 'paste', 'cut', 'beforeinput'].forEach(function(ev){
+      document.addEventListener(ev, function(e){
+        if(!VIEWER) return; var t = e.target; if(t && t.closest && t.closest('#q,#acct,#cloudGate,.ss-in')) return;
+        block(e);
+      }, true);
+    });
+    document.addEventListener('dragover', function(e){ if(VIEWER) e.preventDefault(); }, true);
+    document.addEventListener('keydown', function(e){
+      if(!VIEWER) return; var t = e.target, kk = (e.key || '').toLowerCase(), cm = e.ctrlKey || e.metaKey;
+      if((cm && /^[spuj]$/.test(kk)) || e.key === 'F12' || (cm && e.shiftKey && /^[ijc]$/.test(kk))){ block(e); return; }
+      if(t && t.closest && t.closest('#q,#acct,#cloudGate,.ss-in,#langBtn')) return;
+      if(e.ctrlKey || e.metaKey || e.altKey){ if(!/^[+=\-_0]$/.test(e.key)) block(e); return; }
+      if(/^(\+|=|-|_|0|m|M|t|T|Escape|Tab|\?)$/.test(e.key)) return;
+      block(e);
+    }, true);
+    document.addEventListener('focusin', function(e){
+      if(!VIEWER) return; var t = e.target;
+      if(t && t.closest && t.closest('#world,#tray,#title,#panel') && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) t.blur();
+    });
+    // editing handles never start in viewer mode; a drag that starts on a card pans the chart instead
+    var pan = null;
+    document.addEventListener('pointerdown', function(e){
+      if(!VIEWER || e.button !== 0) return; var t = e.target; if(!t.closest || !t.closest('#stage')) return;
+      if(t.closest('.nh,.rz,.nf,.bfmt,.bt,.imt,.ctx')){ block(e); return; }
+      if(t.closest('.tg,.pgl,.lk,a,.navp,.tray,.glbadge,.pv')) return;
+      if(t.closest('#chart .card,.brand,.pimg,#imgs')){
+        pan = { x: e.clientX, y: e.clientY, px: px, py: py, m: 0, id: e.pointerId };
+      }
+    }, true);
+    window.addEventListener('pointermove', function(e){
+      if(!pan || pan.id !== e.pointerId) return; var dx = e.clientX - pan.x, dy = e.clientY - pan.y;
+      pan.m = Math.max(pan.m, Math.abs(dx) + Math.abs(dy)); if(pan.m > 3){ autoFit = false; px = pan.px + dx; py = pan.py + dy; applyView(); }
+    });
+    window.addEventListener('pointerup', function(){ pan = null; });
+    window.addEventListener('pointercancel', function(){ pan = null; });
+  })();
+
+  /* ================= touch: pinch to zoom ================= */
+  (function pinch(){
+    var st = $('stage'), pts = {}, g = null;
+    function two(){ var k = Object.keys(pts); return k.length === 2 ? [pts[k[0]], pts[k[1]]] : null; }
+    function geo(a){ return { d: Math.max(10, Math.hypot(a[0].x - a[1].x, a[0].y - a[1].y)), cx: (a[0].x + a[1].x) / 2, cy: (a[0].y + a[1].y) / 2 }; }
+    st.addEventListener('pointerdown', function(e){
+      if(e.pointerType !== 'touch') return; pts[e.pointerId] = { x: e.clientX, y: e.clientY };
+      var a = two(); if(a){ var r = st.getBoundingClientRect(), h = geo(a); g = { d: h.d, z: zoom, px: px, py: py, cx: h.cx - r.left, cy: h.cy - r.top }; autoFit = false; }
+    }, true);
+    window.addEventListener('pointermove', function(e){
+      if(!pts[e.pointerId]) return; pts[e.pointerId] = { x: e.clientX, y: e.clientY };
+      if(!g) return; var a = two(); if(!a) return;
+      e.stopImmediatePropagation();
+      var r = st.getBoundingClientRect(), h = geo(a), z = Math.max(0.2, Math.min(2.5, g.z * h.d / g.d)), k = z / g.z;
+      var cx = h.cx - r.left, cy = h.cy - r.top;
+      px = cx - (g.cx - g.px) * k; py = cy - (g.cy - g.py) * k; zoom = z; applyView();
+    }, true);
+    function up(e){ delete pts[e.pointerId]; if(Object.keys(pts).length < 2) g = null; }
+    window.addEventListener('pointerup', up, true); window.addEventListener('pointercancel', up, true);
+  })();
+
+  applyLang(LANG, true);
+
   /* ---------- cloud-authenticated start ---------- */
   async function startAuthenticatedApp(){
     try {
       await loadCloudChart();
+      document.body.classList.remove('signedout');
       $('cloudGate').hidden = true;
       $('cloudSignOut').hidden = false;
       if($('cloudError')) $('cloudError').textContent = '';
@@ -3517,10 +3961,12 @@ button.pav{cursor:pointer;margin-left:8px}
       await startAuthenticatedApp();
     });
     $('cloudSignOut').addEventListener('click', async function(){
+      lockScreen();
+      try { if(cloudDirty && !VIEWER) await flushCloud(); } catch(e){}
       clearTimeout(cloudSaveTimer);
       stopRealtime();
       await cloud.auth.signOut();
-      currentUser = null; cloudBooted = false; cloudDirty = false; cloudConflict = false; syncBase = ''; savingNow = false; renderPeers();
+      currentUser = null; cloudBooted = false; cloudDirty = false; cloudConflict = false; syncBase = ''; savingNow = false; renderPeers(); setViewer(false);
       $('cloudGate').hidden = false; $('cloudSignOut').hidden = true;
       $('cloudPassword').value = '';
       setCloudStatus('ออกจากระบบละเด้อ', 'loading');
@@ -3532,7 +3978,7 @@ button.pav{cursor:pointer;margin-left:8px}
     cloud.auth.onAuthStateChange(function(event, session){
       if(event === 'TOKEN_REFRESHED' && session){ try { cloud.realtime.setAuth(session.access_token); } catch(e){} }
       if(event === 'SIGNED_OUT'){
-        stopRealtime(); currentUser = null; cloudBooted = false; renderPeers();
+        lockScreen(); stopRealtime(); currentUser = null; cloudBooted = false; renderPeers(); setViewer(false);
         $('cloudGate').hidden = false; $('cloudSignOut').hidden = true;
       }
     });
