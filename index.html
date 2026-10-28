@@ -12,12 +12,13 @@
 <meta property="og:site_name" content="Org Chart Maker">
 <meta property="og:title" content="Organization chart">
 <meta property="og:description" content="Editable organization chart. Open this file in a web browser.">
-<meta property="og:image" content="og-preview.png">
+<meta property="og:image" content="https://aedenmeli.github.io/EninGDHAU/og-preview.png">
+<meta property="og:image:type" content="image/png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="Preview of the example organization chart">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="og-preview.png">
+<meta name="twitter:image" content="https://aedenmeli.github.io/EninGDHAU/og-preview.png">
 <style>
 :root{
   --bg:#e9edf0; --paper:#fff; --ink:#16252f; --muted:#5d6e7a; --line:#8fa1ad;
@@ -650,6 +651,7 @@ body.signedout #cloudGate{background:var(--bg,#e8edf0)}
     <label class="field"><span>Display name (shown to other people)</span><input type="text" id="acName" maxlength="40" autocomplete="nickname"></label>
     <label class="field"><span>Your colour (pointer and card tag)</span><input type="color" id="acColor"></label>
     <p class="hint" id="acMail" style="margin:0"></p>
+    <p class="hint" id="acRole" style="margin:0"></p>
     <div class="iebar end"><button class="btn" id="acCancel" type="button">Cancel</button><button class="btn primary" id="acSave" type="button">Save</button></div>
     </div>
     <div id="acCropBox" hidden>
@@ -685,6 +687,8 @@ body.signedout #cloudGate{background:var(--bg,#e8edf0)}
   var SUPABASE_URL = 'https://ibzgaxkrsjkrhacovuzz.supabase.co';
   var SUPABASE_KEY = 'sb_publishable_7DJjIYJNz4jIXKWS5r52Yw_pE8SN4jP';
   var CHART_ID = 'main';
+  // Accounts listed here are always read-only viewers, e.g. ['guest@example.com']. Supabase app_metadata {"role":"viewer"} works too.
+  var VIEWER_EMAILS = [];
   var cloud = null, currentUser = null, currentVersion = 0;
   var cloudDirty = false, cloudConflict = false, cloudBooted = false;
   var cloudSaveTimer = null, cloudChannel = null, applyingRemote = false;
@@ -2350,7 +2354,7 @@ body.signedout #cloudGate{background:var(--bg,#e8edf0)}
       selId = keepSel && state.root && find(keepSel) ? keepSel : null; MSET = {}; if(selId) MSET[selId] = 1;
       $('title').value = state.title || ''; document.title = state.title || 'Organization chart';
       renderChart(); renderPanel(); renderTabs();
-      try { localStorage.setItem(KEY, '{"cur":' + BOOK.cur + ',"glock":' + (BOOK.glock ? 1 : 0) + ',"pages":' + JSON.stringify(BOOK.pages) + '}'); } catch(e){}
+      if(!VIEWER){ try { localStorage.setItem(KEY, '{"cur":' + BOOK.cur + ',"glock":' + (BOOK.glock ? 1 : 0) + ',"pages":' + JSON.stringify(BOOK.pages) + '}'); } catch(e){} }
       if(aid){ var e2 = $(aid); if(e2 && e2 !== document.activeElement && e2.focus){ e2.focus(); try { if(s0 != null) e2.setSelectionRange(s0, s1); } catch(e){} } }
     } finally { applyingRemote = false; }
   }
@@ -2487,7 +2491,7 @@ body.signedout #cloudGate{background:var(--bg,#e8edf0)}
     } else {
       setBook(remoteData); syncBase = syncJSON();
     }
-    try { localStorage.setItem(KEY, JSON.stringify(chartSnapshot())); } catch(e){}
+    if(!VIEWER){ try { localStorage.setItem(KEY, JSON.stringify(chartSnapshot())); } catch(e){} }
     $('title').value = state.title;
     document.title = state.title || 'Organization chart';
     renderChart(); renderPanel(); renderTabs();
@@ -2497,6 +2501,7 @@ body.signedout #cloudGate{background:var(--bg,#e8edf0)}
     cloudDirty = !VIEWER && syncBase === '';
     setCloudStatus('เชื่อมต่อแล้ว', 'saved');
     wireCollab();
+    renderPeers();
     startCloudRealtime();
     startPolling();
     if(cloudDirty) queueCloudSave();
@@ -2563,7 +2568,8 @@ body.signedout #cloudGate{background:var(--bg,#e8edf0)}
       if(!currentUser || !cloudBooted || document.visibilityState === 'hidden') return;
       pollTick++;
       if(!rtJoined && !rtTimer && !rtStopping) scheduleReconnect();
-      if(!rtJoined || pollTick % 4 === 0) checkVersion();      // safety net: also catches a channel that looks alive but is not
+      if(!rtJoined || pollTick % 4 === 0) checkVersion();
+      if(pollTick % 8 === 0) refreshRole();      // safety net: also catches a channel that looks alive but is not
     }, 8000);
   }
 
@@ -2713,7 +2719,7 @@ body.signedout #cloudGate{background:var(--bg,#e8edf0)}
     if(!currentUser) return;
     acDraft = { name: profile.name, avatar: profile.avatar, color: profile.color };
     $('acName').value = acDraft.name; $('acColor').value = okColor(acDraft.color, '#0f6b6b');
-    $('acMail').textContent = currentUser.email || '';
+    $('acMail').textContent = currentUser.email || ''; $('acRole').textContent = VIEWER ? 'Role: Viewer (read-only)' : 'Role: Editor';
     acPaint(); $('acct').hidden = false; $('acName').focus(); $('acName').select();
   }
   function closeAcct(){ $('acct').hidden = true; acDraft = null; closeCrop(); }
@@ -2865,7 +2871,7 @@ body.signedout #cloudGate{background:var(--bg,#e8edf0)}
   searchable($('lnTarget'), 'Search a card to link to…');
   function save(){
     var pj = JSON.stringify(BOOK.pages);
-    try { localStorage.setItem(KEY, '{"cur":' + BOOK.cur + ',"glock":' + (BOOK.glock ? 1 : 0) + ',"pages":' + pj + '}'); } catch(e){}
+    if(!VIEWER){ try { localStorage.setItem(KEY, '{"cur":' + BOOK.cur + ',"glock":' + (BOOK.glock ? 1 : 0) + ',"pages":' + pj + '}'); } catch(e){} }
     queueCloudSave(pj);
     if(!histOn || pj === H[hi]) return;
     if(histT){ H[hi] = pj; } else { H.splice(hi + 1); H.push(pj); hi++; if(H.length > 40){ H.shift(); hi--; } }
@@ -3749,7 +3755,8 @@ body.signedout #cloudGate{background:var(--bg,#e8edf0)}
     'Cards are locked':'การ์ดถูกล็อกอยู่','This only prevents accidental changes to the cards: adding, removing, moving or re-ordering them. You can still view, zoom, search and edit text. Turn it on or off from':'ช่วยป้องกันการเปลี่ยนแปลงโดยไม่ตั้งใจ ได้แก่ เพิ่ม ลบ ย้าย หรือจัดลำดับการ์ดใหม่ แต่ยังดู ซูม ค้นหา และแก้ไขข้อความได้ เปิดหรือปิดได้จาก','View ▸ Lock all cards':'มุมมอง ▸ ล็อกการ์ดทั้งหมด','(or press K). Click this icon to unlock.':'(หรือกดปุ่ม K) คลิกไอคอนนี้เพื่อปลดล็อก','Unlock all cards (K)':'ปลดล็อกการ์ดทั้งหมด (K)',
     'Locked: stays as it is when you collapse all (click to unlock)':'ล็อกอยู่: คงสภาพเดิมเมื่อยุบทั้งหมด (คลิกเพื่อปลดล็อก)','Lock: keep this team as it is when you collapse all':'ล็อก: คงทีมนี้ไว้เมื่อยุบทั้งหมด','Locked: collapse all will skip this team':'ล็อกแล้ว: การยุบทั้งหมดจะข้ามทีมนี้',
     'On: saved smaller (pictures up to 800 px, profile photos 240 px) with lower quality.':'เปิด: บันทึกให้เล็กลง (รูปภาพสูงสุด 800 px รูปโปรไฟล์ 240 px) คุณภาพต่ำลง','Off: original size and quality are kept. The chart file becomes much larger.':'ปิด: คงขนาดและคุณภาพเดิม ไฟล์แผนผังจะใหญ่ขึ้นมาก','Observing':'กำลังสังเกตการณ์','View only: cards stay locked':'โหมดดูอย่างเดียว: การ์ดจะถูกล็อกเสมอ','Crop picture':'ครอปรูปภาพ','Drag to move, use the slider to zoom':'ลากเพื่อเลื่อน ใช้แถบเลื่อนเพื่อซูม','Use crop':'ใช้ส่วนที่ครอป','Zoom':'ซูม','Save as image':'บันทึกเป็นรูปภาพ','Format':'รูปแบบไฟล์','1× (small)':'1× (เล็ก)','2× (sharp)':'2× (คมชัด)','3× (very large)':'3× (ใหญ่มาก)','Quality':'คุณภาพ','Preparing preview…':'กำลังเตรียมตัวอย่าง…','Preview':'ตัวอย่าง','Image saved':'บันทึกรูปภาพแล้ว',
-'Show map':'แสดงแผนที่'
+'Role: Viewer (read-only)':'บทบาท: ผู้ชม (ดูอย่างเดียว)','Role: Editor':'บทบาท: ผู้แก้ไข','Edit access restored':'คืนสิทธิ์แก้ไขแล้ว',
+    'Show map':'แสดงแผนที่'
   };
   var TH_PAIRS = [
     ['Connecting…','กำลังเชื่อมต่อ…'],['Sign out','ออกจากระบบ'],['Saved','บันทึกแล้ว'],['Saving…','กำลังบันทึก…'],['Edited • saving…','มีการแก้ไข • กำลังบันทึก…'],
@@ -3841,9 +3848,23 @@ body.signedout #cloudGate{background:var(--bg,#e8edf0)}
 
   /* ================= read-only viewer ================= */
   var VIEWER = false;
+  function rolesOf(o){ return [].concat((o && o.role) || [], (o && o.roles) || []).map(function(r){ return String(r).toLowerCase(); }); }
   function viewerWanted(u){
-    var am = (u && u.app_metadata) || {};
-    return am.role === 'viewer' || /[?&]view=1\b/.test(location.search);
+    if(/[?&]view=1\b/.test(location.search)) return true;
+    if(!u) return false;
+    var mail = String(u.email || '').toLowerCase();
+    if(VIEWER_EMAILS.some(function(m){ return String(m).toLowerCase() === mail; })) return true;
+    var app = rolesOf(u.app_metadata), usr = rolesOf(u.user_metadata);
+    if(app.some(function(r){ return r === 'editor' || r === 'admin' || r === 'owner'; })) return false;   // an admin-set role always wins
+    return app.indexOf('viewer') >= 0 || usr.indexOf('viewer') >= 0 || (u.app_metadata && u.app_metadata.viewer === true);
+  }
+  async function refreshRole(){
+    if(!cloud || !currentUser) return;
+    try {
+      var r = await cloud.auth.getUser();                 // asks the server, so a role changed after login is picked up
+      if(r.data && r.data.user){ currentUser = r.data.user; var want = viewerWanted(currentUser); if(want !== VIEWER){ setViewer(want); toast(want ? 'View only: cards stay locked' : 'Edit access restored'); } }
+    } catch(e){}
+    if($('acRole')) $('acRole').textContent = VIEWER ? 'Role: Viewer (read-only)' : 'Role: Editor';
   }
   function setViewer(on){
     VIEWER = !!on; document.body.classList.toggle('viewer', VIEWER);
@@ -3928,6 +3949,7 @@ body.signedout #cloudGate{background:var(--bg,#e8edf0)}
   /* ---------- cloud-authenticated start ---------- */
   async function startAuthenticatedApp(){
     try {
+      await refreshRole();
       await loadCloudChart();
       document.body.classList.remove('signedout');
       $('cloudGate').hidden = true;
@@ -3976,7 +3998,7 @@ body.signedout #cloudGate{background:var(--bg,#e8edf0)}
     if(session.data.session){ currentUser = session.data.session.user; await startAuthenticatedApp(); }
     else { $('cloudGate').hidden = false; setCloudStatus('เชิญเข้าสู่ระบบ pls fr fr', 'loading'); }
     cloud.auth.onAuthStateChange(function(event, session){
-      if(event === 'TOKEN_REFRESHED' && session){ try { cloud.realtime.setAuth(session.access_token); } catch(e){} }
+      if((event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') && session){ try { cloud.realtime.setAuth(session.access_token); } catch(e){} if(currentUser){ currentUser = session.user; var wv = viewerWanted(currentUser); if(wv !== VIEWER) setViewer(wv); } }
       if(event === 'SIGNED_OUT'){
         lockScreen(); stopRealtime(); currentUser = null; cloudBooted = false; renderPeers(); setViewer(false);
         $('cloudGate').hidden = false; $('cloudSignOut').hidden = true;
