@@ -973,8 +973,9 @@ body.signedout #cloudGate{background:var(--bg,#e8edf0)}
     if(state.root && !confirm('Replace the current chart with the example? Export first if you want to keep it.')) return;
     replaceCurrent(example()); selId = null; $('title').value = state.title; renderChart(); renderPanel(); save();
   };
-  $('export').onclick = function(){
-    var blob = new Blob([JSON.stringify(BOOK, null, 2)], { type: 'application/json' });
+  $('export').onclick = async function(){
+    var snap = Object.assign({}, BOOK, { pages: await dataifyPages(BOOK.pages) });
+    var blob = new Blob([JSON.stringify(snap, null, 2)], { type: 'application/json' });
     var a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = (state.title || 'org-chart').replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '-').toLowerCase() + '.json';
@@ -1298,6 +1299,7 @@ body.signedout #cloudGate{background:var(--bg,#e8edf0)}
     W = Math.ceil(W); H = Math.ceil(H);
     [].forEach.call(cl.querySelectorAll('.nf,.rz,.bfmt,.bt,.imt,.peerov,.pcur'), function(x){ x.remove(); });
     [].forEach.call(cl.querySelectorAll('.sel,.over,.drag,.hit,.msel'), function(x){ x.classList.remove('sel', 'over', 'drag', 'hit', 'cur', 'msel'); });
+    [].forEach.call(cl.querySelectorAll('img'), function(im){ var u = im.getAttribute('src'); if(INLINE[u]) im.setAttribute('src', INLINE[u]); });
     cl.setAttribute('data-theme', document.documentElement.dataset.theme || 'light'); cl.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
     // keep id="world": its CSS (padding, absolute position) is what makes cards line up with the connector lines
     cl.style.transform = 'none'; cl.style.left = '0'; cl.style.top = '0'; cl.style.minWidth = W + 'px'; cl.style.minHeight = H + 'px';
@@ -1306,7 +1308,8 @@ body.signedout #cloudGate{background:var(--bg,#e8edf0)}
     var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + W + '" height="' + H + '"><foreignObject width="100%" height="100%"><style>' + css + '</style>' + new XMLSerializer().serializeToString(cl) + '</foreignObject></svg>';
     return { svg: svg, W: W, H: H };
   }
-  function renderChartBlob(type, scale, quality, cb){
+  function renderChartBlob(type, scale, quality, cb){ prepareExportImages().then(function(){ renderChartBlob2(type, scale, quality, cb); }, function(){ cb(null); }); }
+  function renderChartBlob2(type, scale, quality, cb){
     var src; try { src = chartSvgSource(); } catch(e){ cb(null); return; }
     var coarse = window.matchMedia && matchMedia('(pointer:coarse)').matches, maxPx = coarse ? 30e6 : 100e6;
     var k = scale; while(k > 0.25 && (src.W * k > 16000 || src.H * k > 16000 || src.W * k * src.H * k > maxPx)) k -= 0.25;
@@ -1346,7 +1349,8 @@ body.signedout #cloudGate{background:var(--bg,#e8edf0)}
   $('expSave').onclick = function(){ if(!EXP.blob) return; dl(EXP.blob, fileBase() + '.' + EXP.type); toast('Image saved'); closeExport(); };
   $('imgPng').onclick = function(){ exportImage('png'); };
   $('imgJpg').onclick = function(){ exportImage('jpg'); };
-  $('htmlOut').onclick = function(){
+  $('htmlOut').onclick = async function(){
+    var snap = Object.assign({}, BOOK, { pages: await dataifyPages(BOOK.pages) });
     var c = document.documentElement.cloneNode(true);
     [].forEach.call(c.querySelectorAll('.ctx,.marq,.toast.show,#embed-data'), function(x){ x.remove(); });
     ['chart', 'notes', 'imgs', 'brand', 'pgtabs', 'lines', 'lines2', 'peerLayer', 'curLayer', 'peers', 'keybox', 'trayList', 'pvBody'].forEach(function(id){ var x = c.querySelector('#' + id); if(x) x.innerHTML = ''; });
@@ -1355,7 +1359,7 @@ body.signedout #cloudGate{background:var(--bg,#e8edf0)}
     var main = c.querySelector('script');
     main.textContent = main.textContent.replace(/var KEY = '[^']*'/, "var KEY = 'org-chart-" + Date.now() + "'");
     var es = document.createElement('script'); es.id = 'embed-data';
-    es.textContent = 'window.__EMBED__=' + JSON.stringify(BOOK).replace(/</g, '\\u003c') + ';';
+    es.textContent = 'window.__EMBED__=' + JSON.stringify(snap).replace(/</g, '\\u003c') + ';';
     main.parentNode.insertBefore(es, main);
     var ttl = state.title || 'Organization chart', tt = c.querySelector('title'); if(tt) tt.textContent = ttl;
     var md = 'Editable organization chart' + (BOOK.pages.length > 1 ? ' (' + BOOK.pages.length + ' pages)' : '') + '. Open this file in a web browser.';
@@ -2434,6 +2438,7 @@ body.signedout #cloudGate{background:var(--bg,#e8edf0)}
     var failed = false;
     try {
       for(var attempt = 0; attempt < 6; attempt++){
+        await externalizeImages();
         var js = syncJSON();
         if(js === syncBase){ cloudDirty = false; setCloudStatus('บันทึกแล้ว', 'saved'); saveFail = 0; break; }
         setCloudStatus('กำลังบันทึก…', 'saving');
@@ -2465,6 +2470,62 @@ body.signedout #cloudGate{background:var(--bg,#e8edf0)}
       clearTimeout(saveRetryT); saveRetryT = setTimeout(flushCloud, Math.min(30000, 1500 * Math.pow(2, Math.min(saveFail, 5))));
     } else if(syncJSON() !== syncBase){ cloudSaveTimer = setTimeout(flushCloud, 200); }
     if(pendingPull){ pendingPull = false; scheduleRemoteCheck(100); }
+  }
+
+  /* ---------- photos live in Supabase Storage; the chart keeps only their links ---------- */
+  (function(){ var N = window.Image; window.Image = function(w, h){ var i = arguments.length ? new N(w, h) : new N(); i.crossOrigin = 'anonymous'; return i; }; window.Image.prototype = N.prototype; })();
+  var IMG_BUCKET = 'chart-images', IMG_MIN = 1500, IMG_URL = {}, URL_DATA = {}, INLINE = {}, imgOffUntil = 0, imgWarned = false;
+  var IMG_TYPES = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/gif': 'gif' };
+  function dataImg(v){ return typeof v === 'string' && v.length > IMG_MIN ? /^data:(image\/(?:jpeg|png|webp|gif));base64,/.exec(v) : null; }
+  function isStoreUrl(v){ return typeof v === 'string' && v.indexOf('/storage/v1/object/public/' + IMG_BUCKET + '/') >= 0; }
+  function walkStrings(o, fn){
+    if(Array.isArray(o)){ for(var i = 0; i < o.length; i++){ if(typeof o[i] === 'string') fn(o, i, o[i]); else if(o[i] && typeof o[i] === 'object') walkStrings(o[i], fn); } }
+    else if(o && typeof o === 'object'){ Object.keys(o).forEach(function(k){ var v = o[k]; if(typeof v === 'string') fn(o, k, v); else if(v && typeof v === 'object') walkStrings(v, fn); }); }
+  }
+  function bookHasDataImages(){ var f = false; walkStrings(BOOK.pages, function(o, k, v){ if(dataImg(v)) f = true; }); return f; }
+  function softHash(bytes){                              // used where crypto.subtle is missing (pages opened over plain http)
+    var h1 = 0xdeadbeef, h2 = 0x41c6ce57, h3 = 0x9e3779b9, h4 = 0x85ebca6b;
+    for(var i = 0; i < bytes.length; i++){ var c = bytes[i]; h1 = Math.imul(h1 ^ c, 2654435761); h2 = Math.imul(h2 ^ c, 1597334677); h3 = Math.imul(h3 ^ c, 2246822519); h4 = Math.imul(h4 ^ c, 3266489917); }
+    return [h1, h2, h3, h4, bytes.length].map(function(x){ return ('00000000' + (x >>> 0).toString(16)).slice(-8); }).join('').slice(0, 32);
+  }
+  async function sha32(bytes){
+    if(window.crypto && crypto.subtle){ try { var h = new Uint8Array(await crypto.subtle.digest('SHA-256', bytes)); return [].map.call(h.slice(0, 16), function(b){ return ('0' + b.toString(16)).slice(-2); }).join(''); } catch(e){} }
+    return softHash(bytes);
+  }
+  async function uploadDataUrl(v, m){
+    if(IMG_URL[v]) return IMG_URL[v];
+    var bin = atob(v.slice(v.indexOf(',') + 1)), arr = new Uint8Array(bin.length); for(var i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+    var path = CHART_ID + '/' + (await sha32(arr)) + '.' + IMG_TYPES[m[1]], st = cloud.storage.from(IMG_BUCKET);
+    var up = await st.upload(path, new Blob([arr], { type: m[1] }), { contentType: m[1], cacheControl: '31536000', upsert: false });
+    if(up.error && !/exist|duplicate/i.test(String(up.error.message || up.error.error || up.error))) throw up.error;   // same picture already stored: fine
+    var url = st.getPublicUrl(path).data.publicUrl; IMG_URL[v] = url; URL_DATA[url] = v; return url;
+  }
+  async function externalizeImages(){
+    if(VIEWER || !cloud || Date.now() < imgOffUntil) return;
+    var found = {}; walkStrings(BOOK.pages, function(o, k, v){ var m = dataImg(v); if(m) found[v] = m; });
+    var keys = Object.keys(found); if(!keys.length) return;
+    var map = {}, fail = 0, i = 0;
+    async function worker(){ while(i < keys.length){ var v = keys[i++]; try { map[v] = await uploadDataUrl(v, found[v]); } catch(e){ fail++; } } }
+    await Promise.all([worker(), worker(), worker()]);
+    walkStrings(BOOK.pages, function(o, k, v){ if(map[v]) o[k] = map[v]; });
+    if(fail){ imgOffUntil = Date.now() + 60000; if(!imgWarned){ imgWarned = true; toast('Photos could not be moved to Storage yet, so they stay inside the chart. Check the "chart-images" bucket and its policies.'); } }
+  }
+  function blobToData(b){ return new Promise(function(res, rej){ var r = new FileReader(); r.onload = function(){ res(r.result); }; r.onerror = rej; r.readAsDataURL(b); }); }
+  async function inlineUrl(u){
+    if(URL_DATA[u]) return URL_DATA[u];
+    var r = await fetch(u, { mode: 'cors' }); if(!r.ok) throw new Error('image ' + r.status);
+    var d = await blobToData(await r.blob()); URL_DATA[u] = d; return d;
+  }
+  async function dataifyPages(pages){                     // a copy of the chart with every Storage link turned back into the picture itself (for files you download)
+    var copy = JSON.parse(JSON.stringify(pages)), urls = {};
+    walkStrings(copy, function(o, k, v){ if(isStoreUrl(v)) urls[v] = 1; });
+    var map = {}; await Promise.all(Object.keys(urls).map(function(u){ return inlineUrl(u).then(function(d){ map[u] = d; }, function(){}); }));
+    walkStrings(copy, function(o, k, v){ if(map[v]) o[k] = map[v]; });
+    return copy;
+  }
+  async function prepareExportImages(){
+    var urls = {}; [].forEach.call($('world').querySelectorAll('img'), function(im){ var u = im.getAttribute('src'); if(isStoreUrl(u)) urls[u] = 1; });
+    await Promise.all(Object.keys(urls).map(function(u){ return inlineUrl(u).then(function(d){ INLINE[u] = d; }, function(){}); }));
   }
 
   async function loadCloudChart(){
@@ -2508,6 +2569,7 @@ body.signedout #cloudGate{background:var(--bg,#e8edf0)}
     startCloudRealtime();
     startPolling();
     if(cloudDirty) queueCloudSave();
+    setTimeout(function(){ if(!VIEWER && bookHasDataImages()) flushCloud(); }, 1500);
   }
 
   /* ---------- realtime: one channel for row changes, "saved" pings, presence and cursors; reconnects by itself ---------- */
@@ -3763,6 +3825,7 @@ body.signedout #cloudGate{background:var(--bg,#e8edf0)}
     'Locked: stays as it is when you collapse all (click to unlock)':'ล็อกอยู่: คงสภาพเดิมเมื่อยุบทั้งหมด (คลิกเพื่อปลดล็อก)','Lock: keep this team as it is when you collapse all':'ล็อก: คงทีมนี้ไว้เมื่อยุบทั้งหมด','Locked: collapse all will skip this team':'ล็อกแล้ว: การยุบทั้งหมดจะข้ามทีมนี้',
     'On: saved smaller (pictures up to 800 px, profile photos 240 px) with lower quality.':'เปิด: บันทึกให้เล็กลง (รูปภาพสูงสุด 800 px รูปโปรไฟล์ 240 px) คุณภาพต่ำลง','Off: original size and quality are kept. The chart file becomes much larger.':'ปิด: คงขนาดและคุณภาพเดิม ไฟล์แผนผังจะใหญ่ขึ้นมาก','Observing':'กำลังสังเกตการณ์','View only: cards stay locked':'โหมดดูอย่างเดียว: การ์ดจะถูกล็อกเสมอ','Crop picture':'ครอปรูปภาพ','Drag to move, use the slider to zoom':'ลากเพื่อเลื่อน ใช้แถบเลื่อนเพื่อซูม','Use crop':'ใช้ส่วนที่ครอป','Zoom':'ซูม','Save as image':'บันทึกเป็นรูปภาพ','Format':'รูปแบบไฟล์','1× (small)':'1× (เล็ก)','2× (sharp)':'2× (คมชัด)','3× (very large)':'3× (ใหญ่มาก)','Quality':'คุณภาพ','Preparing preview…':'กำลังเตรียมตัวอย่าง…','Preview':'ตัวอย่าง','Image saved':'บันทึกรูปภาพแล้ว',
 'Role: Viewer (read-only)':'บทบาท: ผู้ชม (ดูอย่างเดียว)','Role: Editor':'บทบาท: ผู้แก้ไข','Edit access restored':'คืนสิทธิ์แก้ไขแล้ว',
+    'Photos could not be moved to Storage yet, so they stay inside the chart. Check the "chart-images" bucket and its policies.':'ย้ายรูปภาพไปที่ Storage ยังไม่สำเร็จ รูปจึงยังอยู่ในแผนผัง กรุณาตรวจสอบบักเก็ต "chart-images" และนโยบายสิทธิ์',
     'Show map':'แสดงแผนที่'
   };
   var TH_PAIRS = [
