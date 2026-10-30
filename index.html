@@ -12,13 +12,13 @@
 <meta property="og:site_name" content="Org Chart Maker">
 <meta property="og:title" content="Organization chart">
 <meta property="og:description" content="Editable organization chart. Open this file in a web browser.">
-<meta property="og:image" content="https://aedenmeli.github.io/EninGDHAU/og-preview.png">
+<meta property="og:image" content="og-preview.png">
 <meta property="og:image:type" content="image/png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="Preview of the example organization chart">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://aedenmeli.github.io/EninGDHAU/og-preview.png">
+<meta name="twitter:image" content="og-preview.png">
 <style>
 :root{
   --bg:#e9edf0; --paper:#fff; --ink:#16252f; --muted:#5d6e7a; --line:#8fa1ad;
@@ -2187,7 +2187,7 @@ body.signedout #cloudGate{background:var(--bg,#e8edf0)}
   }
   /* ================= collaboration layer: sync, merge, presence, cursors, profile ================= */
   var SESSION_KEY = 's' + Math.random().toString(36).slice(2, 10);
-  var syncBase = '', savingNow = false, pendingPull = false, pulling = false, saveFail = 0, saveRetryT = 0;
+  var saveFirstAt = 0, syncBase = '', savingNow = false, pendingPull = false, pulling = false, saveFail = 0, saveRetryT = 0;
   var rtJoined = false, rtStopping = false, rtTry = 0, rtTimer = 0, pollTick = 0, pollT = 0, remoteT = 0;
   var PEERS = {}, CUR = {}, profile = { name: '', avatar: '', color: '#0f6b6b' }, editingNow = false, lastTyped = 0, collabWired = false;
   var PALETTE = ['#e0480b', '#0f6b6b', '#7b3fa0', '#c2185b', '#1565c0', '#8d6e00', '#2e7d32', '#ad4a00', '#00838f', '#5d4037'];
@@ -2424,25 +2424,28 @@ body.signedout #cloudGate{background:var(--bg,#e8edf0)}
     if(syncJSON(pj) === syncBase){ if(cloudDirty && !savingNow){ cloudDirty = false; setCloudStatus('บันทึกแล้ว', 'saved'); } return; }
     cloudDirty = true;
     setCloudStatus('มีการแก้ไข • กำลังบันทึก…', 'saving');
-    clearTimeout(cloudSaveTimer); cloudSaveTimer = setTimeout(flushCloud, 700);
+    if(!saveFirstAt) saveFirstAt = Date.now();
+    clearTimeout(cloudSaveTimer); cloudSaveTimer = setTimeout(flushCloud, Date.now() - saveFirstAt > 2000 ? 0 : 300);
   }
   async function flushCloud(){
     if(!currentUser || !cloudBooted || VIEWER) return;
     if(savingNow){ return; }                 // the running save re-checks for newer edits when it finishes
-    savingNow = true; clearTimeout(cloudSaveTimer); clearTimeout(saveRetryT);
+    savingNow = true; saveFirstAt = 0; clearTimeout(cloudSaveTimer); clearTimeout(saveRetryT);
     var failed = false;
     try {
       for(var attempt = 0; attempt < 6; attempt++){
         var js = syncJSON();
         if(js === syncBase){ cloudDirty = false; setCloudStatus('บันทึกแล้ว', 'saved'); saveFail = 0; break; }
         setCloudStatus('กำลังบันทึก…', 'saving');
-        var payload = JSON.parse(js); payload.cur = BOOK.cur;
+        var payload = JSON.parse(js); payload.cur = BOOK.cur, t0 = performance.now();
         var r = await cloud.rpc('save_org_chart', { p_id: CHART_ID, p_data: payload, p_expected_version: currentVersion });
         if(r.error) throw r.error;
         var row = r.data && r.data[0];
         if(row && row.ok){
           currentVersion = Number(row.new_version) || currentVersion + 1; syncBase = js; saveFail = 0;
-          try { if(cloudChannel && rtJoined) cloudChannel.send({ type: 'broadcast', event: 'saved', payload: { v: currentVersion, u: currentUser.id } }); } catch(e){}
+          var bytes = new TextEncoder().encode(js).length;
+          try { $('cloudBadge').title = 'Last save: ' + Math.round(performance.now() - t0) + ' ms \u00b7 ' + Math.max(1, Math.round(bytes / 1024)) + ' KB'; } catch(e){}
+          try { if(cloudChannel && rtJoined) cloudChannel.send({ type: 'broadcast', event: 'saved', payload: bytes < 200000 ? { v: currentVersion, u: currentUser.id, d: payload } : { v: currentVersion, u: currentUser.id } }); } catch(e){}
           continue;
         }
         // someone saved first: fetch their copy, merge node by node, then save the merged result
@@ -2535,7 +2538,11 @@ body.signedout #cloudGate{background:var(--bg,#e8edf0)}
     var ch = cloud.channel('org-chart-' + CHART_ID, { config: { presence: { key: SESSION_KEY }, broadcast: { self: false } } });
     cloudChannel = ch;
     ch.on('postgres_changes', { event: '*', schema: 'public', table: 'org_charts', filter: 'id=eq.' + CHART_ID }, onRowChange)
-      .on('broadcast', { event: 'saved' }, function(m){ var p = m && m.payload || {}; if(Number(p.v) > currentVersion) scheduleRemoteCheck(80); })
+      .on('broadcast', { event: 'saved' }, function(m){
+        var p = m && m.payload || {}, v = Number(p.v); if(!(v > currentVersion)) return;
+        if(p.d && p.d.pages && !savingNow) applyRemote(p.d, v, { by: p.u });     // the change itself came with the ping: no database round trip
+        else scheduleRemoteCheck(80);
+      })
       .on('broadcast', { event: 'cursor' }, onCursor)
       .on('presence', { event: 'sync' }, onPresenceSync)
       .subscribe(function(status){
@@ -3771,7 +3778,7 @@ body.signedout #cloudGate{background:var(--bg,#e8edf0)}
     ['• #1 online','• ออนไลน์ #1 คน'],['Cloud save failed: $1','บันทึกคลาวด์ไม่สำเร็จ: $1'],['Oops! Sign-in failed: $1','อ้าว! เข้าสู่ระบบไม่สำเร็จ?: $1'],
     ['Oops, the chart could not be loaded: $1\nCheck the Supabase settings, the table, RLS and the row id=main','อ้าว โหลดแผนผังไม่สำเร็จ: $1\nตรวจสอบการตั้งค่า Supabase, ตาราง, RLS และแถว id=main'],
     ['Merged with another user’s edits. #1 field(s) were edited by both of you; yours were kept.','รวมการแก้ไขของผู้ใช้อื่นแล้ว มี #1 ช่องที่แก้ไขพร้อมกัน ระบบเก็บของคุณไว้'],
-    ['Updated by $1','อัปเดตโดย $1'],['Saved on this device only: $1','บันทึกในอุปกรณ์นี้เท่านั้น: $1'],['$1 (you) — account settings','$1 (คุณ) — ตั้งค่าบัญชี'],['$1 is online','$1 ออนไลน์อยู่'],['$1 is editing','$1 กำลังแก้ไข'],['$1 is editing “$2”','$1 กำลังแก้ไข “$2”'],['$1 ✎ editing','$1 ✎ กำลังแก้ไข'],
+    ['Last save: #1 ms · #2 KB','บันทึกล่าสุด: #1 ms · #2 KB'],['Updated by $1','อัปเดตโดย $1'],['Saved on this device only: $1','บันทึกในอุปกรณ์นี้เท่านั้น: $1'],['$1 (you) — account settings','$1 (คุณ) — ตั้งค่าบัญชี'],['$1 is online','$1 ออนไลน์อยู่'],['$1 is editing','$1 กำลังแก้ไข'],['$1 is editing “$2”','$1 กำลังแก้ไข “$2”'],['$1 ✎ editing','$1 ✎ กำลังแก้ไข'],
     ['No card matches “$1”','ไม่พบการ์ดที่ตรงกับ “$1”'],['#1 more — keep typing to narrow down','อีก #1 รายการ — พิมพ์เพิ่มเพื่อกรอง'],
     ['#1 cards selected (edits apply to all)','เลือก #1 การ์ด (การแก้ไขจะใช้กับทั้งหมด)'],['#1 of #2 (this card)','อันดับ #1 จาก #2 (การ์ดนี้)'],['#1 of #2','อันดับ #1 จาก #2'],
     ['#1 pages duplicated','ทำสำเนา #1 หน้าแล้ว'],['#1 pages copied','คัดลอก #1 หน้าแล้ว'],['#1 cards copied','คัดลอก #1 การ์ดแล้ว'],['#1 pictures copied','คัดลอก #1 รูปภาพแล้ว'],
